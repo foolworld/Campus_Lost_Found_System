@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 校园失物招领{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="bg-primary text-white p-4 rounded-lg">
+        <h1 class="display-4">校园失物招领</h1>
+        <p class="lead">让失物早日回家，让善意传递温暖</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <i class="fas fa-search fa-4x"></i>
+                    </div>
+                    <div class="col-6 text-right">
+                        <h3 class="card-title">拾物信息</h3>
+                        <p class="card-text">{{ total_posts }} 条</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <i class="fas fa-users fa-4x"></i>
+                    </div>
+                    <div class="col-6 text-right">
+                        <h3 class="card-title">注册用户</h3>
+                        <p class="card-text">{{ total_users }} 人</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-4">
+    <form class="d-flex" action="{{ url_for('search') }}" method="GET">
+        <input class="form-control me-2" type="search" name="keyword" placeholder="搜索失物信息..." aria-label="搜索">
+        <button class="btn btn-primary" type="submit">
+            <i class="fas fa-search"></i> 搜索
+        </button>
+    </form>
+</div>
+
+<h2 class="mb-3">最新拾物信息</h2>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for post in posts %}
+    <div class="col">
+        <div class="card h-100 shadow">
+            {% if post.image %}
+            <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-image fa-5x text-muted"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text text-muted">{{ post.description[:50] }}{% if post.description|length > 50 %}...{% endif %}</p>
+                <div class="small text-muted">
+                    <p><i class="fas fa-map-marker-alt"></i> {{ post.location }}</p>
+                    <p><i class="fas fa-clock"></i> {{ post.pickup_time }}</p>
+                    <p><i class="fas fa-user"></i> {{ post.author.username }}</p>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <span class="badge bg-{{ 'success' if post.status == 'approved' else 'warning' }}">
+                    {{ '已审核' if post.status == 'approved' else '待审核' }}
+                </span>
+                <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-primary float-end btn-sm">
+                    查看详情
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-8">
+        <i class="fas fa-inbox fa-5x text-muted mb-3"></i>
+        <p class="text-muted">暂无拾物信息，快来发布第一条吧！</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% if posts %}
+<div class="mt-4">
+    <nav aria-label="分页">
+        <ul class="pagination justify-content-center">
+            {% if page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('index', page=page-1) }}">上一页</a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">{{ page }}</span>
+            </li>
+            {% if page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('index', page=page+1) }}">下一页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+{% endblock %}
