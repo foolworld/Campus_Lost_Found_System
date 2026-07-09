@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from functools import wraps
 import os
 import datetime
 import jieba
@@ -19,6 +20,17 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
+        if current_user.role != 'admin':
+            flash('无权访问此页面', 'danger')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,27 +53,11 @@ class Post(db.Model):
     location = db.Column(db.String(100), nullable=False)
     place_location = db.Column(db.String(100), nullable=False)
     image = db.Column(db.String(200))
-    author_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
-    post_type = db.Column(db.String(10), default='found')
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status = db.Column(db.String(20), default='pending')
     created_at = db.Column(db.DateTime, default=datetime.datetime.now)
 
     author = db.relationship('User', backref=db.backref('posts', lazy=True))
-
-class Report(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'), nullable=False)
-    reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    reason = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(20), default='pending')
-    result = db.Column(db.String(20))
-    handled_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.now)
-    handled_at = db.Column(db.DateTime)
-
-    post = db.relationship('Post', backref=db.backref('reports', lazy=True))
-    reporter = db.relationship('User', foreign_keys=[reporter_id], backref=db.backref('reported_posts', lazy=True))
-    handler = db.relationship('User', foreign_keys=[handled_by], backref=db.backref('handled_reports', lazy=True))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -125,12 +121,6 @@ def search_with_similarity(keyword, top_n=10):
         doc_tokens = tokenize(doc_text)
         doc_tfidf = compute_tfidf(doc_tokens, idf)
         similarity = cosine_similarity(query_tfidf, doc_tfidf)
-        
-        for qt in query_tokens:
-            for dt in doc_tokens:
-                if qt in dt or dt in qt:
-                    similarity += 0.1
-        
         if similarity > 0.01:
             results.append((post, similarity))
     
@@ -140,16 +130,10 @@ def search_with_similarity(keyword, top_n=10):
 @app.route('/')
 def index():
     page = request.args.get('page', 1, type=int)
-    sort = request.args.get('sort', 'time', type=str)
-    
-    if sort == 'hot':
-        posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
-    else:
-        posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
-    
+    posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
     total_posts = Post.query.filter_by(status='approved').count()
     total_users = User.query.count()
-    return render_template('index.html', posts=posts.items, page=page, total_pages=posts.pages, total_posts=total_posts, total_users=total_users, sort=sort)
+    return render_template('index.html', posts=posts.items, page=page, total_pages=posts.pages, total_posts=total_posts, total_users=total_users)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -191,10 +175,13 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        remember = True if request.form.get('remember') else False
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
-            login_user(user)
+            login_user(user, remember=remember)
             flash('登录成功！', 'success')
+            if user.role == 'admin':
+                return redirect(url_for('admin_dashboard'))
             return redirect(url_for('index'))
         flash('用户名或密码错误', 'danger')
     return render_template('login.html')
@@ -204,23 +191,15 @@ def login():
 def logout():
     logout_user()
     flash('已退出登录', 'info')
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 @app.route('/search')
 def search():
     keyword = request.args.get('keyword', '')
-    post_type = request.args.get('post_type', 'all')
     posts = []
     if keyword:
         posts = search_with_similarity(keyword, top_n=20)
-        if post_type != 'all':
-            posts = [p for p in posts if p.post_type == post_type]
-    else:
-        query = Post.query.filter_by(status='approved')
-        if post_type != 'all':
-            query = query.filter_by(post_type=post_type)
-        posts = query.order_by(Post.created_at.desc()).all()
-    return render_template('search.html', posts=posts, keyword=keyword, post_type=post_type)
+    return render_template('search.html', posts=posts, keyword=keyword)
 
 @app.route('/publish', methods=['GET', 'POST'])
 @login_required
@@ -231,7 +210,6 @@ def publish():
         pickup_time = request.form['pickup_time']
         location = request.form['location']
         place_location = request.form['place_location']
-        post_type = request.form.get('post_type', 'found')
         
         image = None
         if 'image' in request.files:
@@ -248,8 +226,7 @@ def publish():
             location=location,
             place_location=place_location,
             image=image,
-            author_id=current_user.id,
-            post_type=post_type
+            author_id=current_user.id
         )
         db.session.add(new_post)
         db.session.commit()
@@ -397,10 +374,9 @@ def delete_user(user_id):
         flash('不能删除管理员', 'danger')
         return redirect(url_for('admin_dashboard', tab='users'))
     
-    Post.query.filter_by(author_id=user_id).delete()
     db.session.delete(user)
     db.session.commit()
-    flash('删除用户成功，其发布的帖子已一并删除', 'success')
+    flash('删除用户成功', 'success')
     return redirect(url_for('admin_dashboard', tab='users'))
 
 @app.route('/admin/user/<int:user_id>/promote')
@@ -415,172 +391,6 @@ def promote_user(user_id):
     db.session.commit()
     flash(f'{user.username} 已提升为管理员', 'success')
     return redirect(url_for('admin_dashboard', tab='users'))
-
-@app.route('/admin/users/batch-delete', methods=['POST'])
-@login_required
-def batch_delete_users():
-    if current_user.role != 'admin':
-        flash('无权执行此操作', 'danger')
-        return redirect(url_for('index'))
-    
-    user_ids = request.form.get('user_ids', '')
-    if not user_ids:
-        flash('请选择要删除的用户', 'warning')
-        return redirect(url_for('admin_dashboard', tab='users'))
-    
-    user_id_list = [int(id.strip()) for id in user_ids.split(',') if id.strip().isdigit()]
-    deleted_count = 0
-    skipped_admins = []
-    
-    for user_id in user_id_list:
-        user = User.query.get(user_id)
-        if not user:
-            continue
-        if user.role == 'admin':
-            skipped_admins.append(user.username)
-            continue
-        
-        Post.query.filter_by(author_id=user_id).delete()
-        db.session.delete(user)
-        deleted_count += 1
-    
-    if deleted_count > 0:
-        db.session.commit()
-        flash(f'成功删除 {deleted_count} 个用户', 'success')
-    
-    if skipped_admins:
-        flash(f'以下管理员用户无法删除：{", ".join(skipped_admins)}', 'warning')
-    
-    if deleted_count == 0 and not skipped_admins:
-        flash('未删除任何用户', 'warning')
-    
-    return redirect(url_for('admin_dashboard', tab='users'))
-
-@app.route('/admin/posts/batch-review', methods=['POST'])
-@login_required
-def batch_review_posts():
-    if current_user.role != 'admin':
-        flash('无权执行此操作', 'danger')
-        return redirect(url_for('index'))
-    
-    post_ids = request.form.get('post_ids', '')
-    action = request.form.get('action', '')
-    
-    if not post_ids:
-        flash('请选择要审核的信息', 'warning')
-        return redirect(url_for('admin_dashboard', tab='pending'))
-    
-    if action not in ['approve', 'reject']:
-        flash('无效的操作类型', 'danger')
-        return redirect(url_for('admin_dashboard', tab='pending'))
-    
-    post_id_list = [int(id.strip()) for id in post_ids.split(',') if id.strip().isdigit()]
-    reviewed_count = 0
-    skipped_count = 0
-    
-    for post_id in post_id_list:
-        post = Post.query.get(post_id)
-        if not post:
-            continue
-        if post.status != 'pending':
-            skipped_count += 1
-            continue
-        
-        post.status = 'approved' if action == 'approve' else 'rejected'
-        reviewed_count += 1
-    
-    if reviewed_count > 0:
-        db.session.commit()
-        action_text = '通过' if action == 'approve' else '拒绝'
-        flash(f'成功{action_text} {reviewed_count} 条信息', 'success')
-    
-    if skipped_count > 0:
-        flash(f'{skipped_count} 条信息非待审核状态，已跳过', 'warning')
-    
-    if reviewed_count == 0 and skipped_count == 0:
-        flash('未审核任何信息', 'warning')
-    
-    return redirect(url_for('admin_dashboard', tab='pending'))
-
-@app.route('/post/<int:post_id>/report', methods=['POST'])
-@login_required
-def report_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    
-    if post.author_id == current_user.id:
-        flash('不能举报自己的帖子', 'danger')
-        return redirect(url_for('post_detail', post_id=post_id))
-    
-    existing_report = Report.query.filter_by(post_id=post_id, reporter_id=current_user.id).first()
-    if existing_report:
-        flash('您已举报过此帖子', 'warning')
-        return redirect(url_for('post_detail', post_id=post_id))
-    
-    reason = request.form.get('reason', '').strip()
-    if not reason:
-        flash('请填写举报原因', 'danger')
-        return redirect(url_for('post_detail', post_id=post_id))
-    
-    report = Report(
-        post_id=post_id,
-        reporter_id=current_user.id,
-        reason=reason
-    )
-    db.session.add(report)
-    db.session.commit()
-    
-    flash('举报成功，管理员将尽快处理', 'success')
-    return redirect(url_for('post_detail', post_id=post_id))
-
-@app.route('/admin/reports')
-@login_required
-def admin_reports():
-    if current_user.role != 'admin':
-        flash('无权访问举报管理', 'danger')
-        return redirect(url_for('index'))
-    
-    reports = Report.query.order_by(Report.created_at.desc()).all()
-    pending_count = Report.query.filter_by(status='pending').count()
-    
-    return render_template('admin_reports.html', 
-                           reports=reports, 
-                           pending_count=pending_count,
-                           approved_count=Post.query.filter_by(status='approved').count(),
-                           rejected_count=Post.query.filter_by(status='rejected').count(),
-                           total_users=User.query.count())
-
-@app.route('/admin/report/<int:report_id>/handle', methods=['POST'])
-@login_required
-def handle_report(report_id):
-    if current_user.role != 'admin':
-        flash('无权执行此操作', 'danger')
-        return redirect(url_for('index'))
-    
-    report = Report.query.get_or_404(report_id)
-    result = request.form.get('result', '')
-    
-    if result not in ['violation', 'rejected']:
-        flash('无效的处理结果', 'danger')
-        return redirect(url_for('admin_reports'))
-    
-    report.status = 'handled'
-    report.result = result
-    report.handled_by = current_user.id
-    report.handled_at = datetime.datetime.now()
-    
-    if result == 'violation':
-        post = Post.query.get(report.post_id)
-        if post:
-            post.status = 'rejected'
-    
-    db.session.commit()
-    
-    if result == 'violation':
-        flash('已确认违规，帖子已被拒绝', 'success')
-    else:
-        flash('已驳回举报', 'success')
-    
-    return redirect(url_for('admin_reports'))
 
 def create_sample_data():
     sample_users = [
@@ -701,7 +511,6 @@ def create_sample_data():
                     location=p['location'],
                     place_location=p['place_location'],
                     author_id=author.id,
-                    post_type=p.get('post_type', 'found'),
                     status=p['status']
                 )
                 db.session.add(post)

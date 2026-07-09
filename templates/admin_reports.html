@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}举报管理 - 校园失物招领{% endblock %}
+
+{% block content %}
+<h2>举报管理</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h3>{{ pending_count }}</h3>
+                <p>待处理</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ approved_count }}</h3>
+                <p>已通过</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ rejected_count }}</h3>
+                <p>已拒绝</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ total_users }}</h3>
+                <p>用户总数</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>帖子标题</th>
+            <th>举报人</th>
+            <th>举报原因</th>
+            <th>举报时间</th>
+            <th>状态</th>
+            <th>处理结果</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for report in reports %}
+        <tr>
+            <td>{{ report.id }}</td>
+            <td><a href="{{ url_for('post_detail', post_id=report.post.id) }}">{{ report.post.title }}</a></td>
+            <td>{{ report.reporter.username }}</td>
+            <td>{{ report.reason[:50] }}{% if report.reason|length > 50 %}...{% endif %}</td>
+            <td>{{ report.created_at }}</td>
+            <td><span class="badge bg-{{ 'danger' if report.status == 'pending' else 'success' }}">{{ '待处理' if report.status == 'pending' else '已处理' }}</span></td>
+            <td>
+                {% if report.result == 'violation' %}
+                <span class="badge bg-danger">确认违规</span>
+                {% elif report.result == 'rejected' %}
+                <span class="badge bg-secondary">驳回举报</span>
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if report.status == 'pending' %}
+                <form action="{{ url_for('handle_report', report_id=report.id) }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="result" value="violation">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确认违规？帖子将被拒绝。')">确认违规</button>
+                </form>
+                <form action="{{ url_for('handle_report', report_id=report.id) }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="result" value="rejected">
+                    <button type="submit" class="btn btn-secondary btn-sm ms-2" onclick="return confirm('确认驳回举报？')">驳回</button>
+                </form>
+                {% else %}
+                {% if report.handler %}
+                <small class="text-muted">由 {{ report.handler.username }} 处理</small>
+                {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if not reports %}
+<div class="col-12 text-center py-8">
+    <i class="fas fa-inbox fa-5x text-muted mb-3"></i>
+    <p class="text-muted">暂无举报记录</p>
+</div>
+{% endif %}
+{% endblock %}
