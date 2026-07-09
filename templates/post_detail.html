@@ -7,7 +7,9 @@
     <div class="col-md-8">
         <div class="card shadow-lg">
             {% if post.image %}
-            <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片">
+            <div class="card-img-top cursor-pointer" data-bs-toggle="modal" data-bs-target="#imageModal" style="max-height: 400px; overflow: hidden;">
+                <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top img-fluid" alt="物品图片" style="transition: transform 0.3s; cursor: zoom-in;">
+            </div>
             {% else %}
             <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                 <i class="fas fa-image fa-5x text-muted"></i>
@@ -16,6 +18,9 @@
             <div class="card-body">
                 <h1 class="card-title">{{ post.title }}</h1>
                 <div class="mb-4">
+                    <span class="badge bg-{{ 'success' if post.post_type == 'found' else 'danger' }}">
+                        {{ '拾物' if post.post_type == 'found' else '失物' }}
+                    </span>
                     <span class="badge bg-{{ 'success' if post.status == 'approved' else 'warning' }}">
                         {{ '已审核' if post.status == 'approved' else '待审核' }}
                     </span>
@@ -24,6 +29,7 @@
                 <p class="card-text">{{ post.description }}</p>
                 <div class="mt-4">
                     <h5><i class="fas fa-info-circle"></i> 详细信息</h5>
+                    {% if current_user.is_authenticated %}
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <i class="fas fa-map-marker-alt text-primary"></i> 拾取地点：{{ post.location }}
@@ -38,6 +44,12 @@
                             <i class="fas fa-calendar text-muted"></i> 发布时间：{{ post.created_at }}
                         </li>
                     </ul>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-lock"></i> 登录后查看完整信息，包括放置地点和联系方式
+                        <a href="{{ url_for('login') }}" class="btn btn-primary mt-2">立即登录</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             <div class="card-footer bg-transparent">
@@ -82,11 +94,14 @@
                 <h5><i class="fas fa-share-alt"></i> 分享</h5>
             </div>
             <div class="card-body">
-                <button class="btn btn-outline-primary w-100 mb-2">
+                <button class="btn btn-outline-primary w-100 mb-2" onclick="shareToWechat()">
                     <i class="fab fa-weixin"></i> 微信分享
                 </button>
-                <button class="btn btn-outline-primary w-100">
+                <button class="btn btn-outline-primary w-100" onclick="shareToQQ()">
                     <i class="fab fa-qq"></i> QQ分享
+                </button>
+                <button class="btn btn-outline-secondary w-100 mt-2" onclick="copyLink()">
+                    <i class="fas fa-link"></i> 复制链接
                 </button>
             </div>
         </div>
@@ -112,3 +127,54 @@
     </div>
 </div>
 {% endblock %}
+
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">物品大图</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-black d-flex justify-content-center">
+                {% if post.image %}
+                <img src="{{ url_for('static', filename='images/' + post.image) }}" class="img-fluid" alt="物品大图">
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function shareToWechat() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ post.title }}',
+            text: '{{ post.description }}',
+            url: window.location.href
+        }).catch(console.error);
+    } else {
+        copyLink();
+        alert('已复制链接，请在微信中粘贴分享');
+    }
+}
+
+function shareToQQ() {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent('{{ post.title }}');
+    window.open(`https://connect.qq.com/widget/shareqq/index.html?url=${url}&title=${title}`, '_blank');
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('链接已复制到剪贴板');
+    }).catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = window.location.href;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('链接已复制到剪贴板');
+    });
+}
+</script>

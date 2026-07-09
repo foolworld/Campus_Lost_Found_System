@@ -41,7 +41,8 @@ class Post(db.Model):
     location = db.Column(db.String(100), nullable=False)
     place_location = db.Column(db.String(100), nullable=False)
     image = db.Column(db.String(200))
-    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    post_type = db.Column(db.String(10), default='found')
     status = db.Column(db.String(20), default='pending')
     created_at = db.Column(db.DateTime, default=datetime.datetime.now)
 
@@ -109,6 +110,12 @@ def search_with_similarity(keyword, top_n=10):
         doc_tokens = tokenize(doc_text)
         doc_tfidf = compute_tfidf(doc_tokens, idf)
         similarity = cosine_similarity(query_tfidf, doc_tfidf)
+        
+        for qt in query_tokens:
+            for dt in doc_tokens:
+                if qt in dt or dt in qt:
+                    similarity += 0.1
+        
         if similarity > 0.01:
             results.append((post, similarity))
     
@@ -118,10 +125,16 @@ def search_with_similarity(keyword, top_n=10):
 @app.route('/')
 def index():
     page = request.args.get('page', 1, type=int)
-    posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
+    sort = request.args.get('sort', 'time', type=str)
+    
+    if sort == 'hot':
+        posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
+    else:
+        posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
+    
     total_posts = Post.query.filter_by(status='approved').count()
     total_users = User.query.count()
-    return render_template('index.html', posts=posts.items, page=page, total_pages=posts.pages, total_posts=total_posts, total_users=total_users)
+    return render_template('index.html', posts=posts.items, page=page, total_pages=posts.pages, total_posts=total_posts, total_users=total_users, sort=sort)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -181,10 +194,18 @@ def logout():
 @app.route('/search')
 def search():
     keyword = request.args.get('keyword', '')
+    post_type = request.args.get('post_type', 'all')
     posts = []
     if keyword:
         posts = search_with_similarity(keyword, top_n=20)
-    return render_template('search.html', posts=posts, keyword=keyword)
+        if post_type != 'all':
+            posts = [p for p in posts if p.post_type == post_type]
+    else:
+        query = Post.query.filter_by(status='approved')
+        if post_type != 'all':
+            query = query.filter_by(post_type=post_type)
+        posts = query.order_by(Post.created_at.desc()).all()
+    return render_template('search.html', posts=posts, keyword=keyword, post_type=post_type)
 
 @app.route('/publish', methods=['GET', 'POST'])
 @login_required
@@ -195,6 +216,7 @@ def publish():
         pickup_time = request.form['pickup_time']
         location = request.form['location']
         place_location = request.form['place_location']
+        post_type = request.form.get('post_type', 'found')
         
         image = None
         if 'image' in request.files:
@@ -211,7 +233,8 @@ def publish():
             location=location,
             place_location=place_location,
             image=image,
-            author_id=current_user.id
+            author_id=current_user.id,
+            post_type=post_type
         )
         db.session.add(new_post)
         db.session.commit()
@@ -359,9 +382,10 @@ def delete_user(user_id):
         flash('不能删除管理员', 'danger')
         return redirect(url_for('admin_dashboard', tab='users'))
     
+    Post.query.filter_by(author_id=user_id).delete()
     db.session.delete(user)
     db.session.commit()
-    flash('删除用户成功', 'success')
+    flash('删除用户成功，其发布的帖子已一并删除', 'success')
     return redirect(url_for('admin_dashboard', tab='users'))
 
 @app.route('/admin/user/<int:user_id>/promote')
@@ -496,6 +520,7 @@ def create_sample_data():
                     location=p['location'],
                     place_location=p['place_location'],
                     author_id=author.id,
+                    post_type=p.get('post_type', 'found'),
                     status=p['status']
                 )
                 db.session.add(post)

@@ -6,11 +6,22 @@
 <h2>搜索结果</h2>
 
 <div class="mb-4">
-    <form class="d-flex" action="{{ url_for('search') }}" method="GET">
-        <input class="form-control me-2" type="search" name="keyword" value="{{ keyword }}" placeholder="搜索失物信息..." aria-label="搜索">
-        <button class="btn btn-primary" type="submit">
-            <i class="fas fa-search"></i> 搜索
-        </button>
+    <form class="row g-2" action="{{ url_for('search') }}" method="GET">
+        <div class="col-md-8">
+            <input class="form-control" type="search" name="keyword" value="{{ keyword }}" placeholder="搜索失物信息..." aria-label="搜索">
+        </div>
+        <div class="col-md-2">
+            <select class="form-select" name="post_type">
+                <option value="all" {% if post_type == 'all' %}selected{% endif %}>全部</option>
+                <option value="found" {% if post_type == 'found' %}selected{% endif %}>拾物</option>
+                <option value="lost" {% if post_type == 'lost' %}selected{% endif %}>失物</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit">
+                <i class="fas fa-search"></i> 搜索
+            </button>
+        </div>
     </form>
 </div>
 
@@ -34,11 +45,16 @@
                 <p class="card-text text-muted">{{ post.description[:50] }}{% if post.description|length > 50 %}...{% endif %}</p>
                 <div class="small text-muted">
                     <p><i class="fas fa-map-marker-alt"></i> {{ post.location }}</p>
+                    {% if current_user.is_authenticated %}
                     <p><i class="fas fa-clock"></i> {{ post.pickup_time }}</p>
+                    {% endif %}
                     <p><i class="fas fa-user"></i> {{ post.author.username }}</p>
                 </div>
             </div>
             <div class="card-footer bg-transparent">
+                <span class="badge bg-{{ 'success' if post.post_type == 'found' else 'danger' }}">
+                    {{ '拾物' if post.post_type == 'found' else '失物' }}
+                </span>
                 <span class="badge bg-{{ 'success' if post.status == 'approved' else 'warning' }}">
                     {{ '已审核' if post.status == 'approved' else '待审核' }}
                 </span>

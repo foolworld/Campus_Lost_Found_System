@@ -7,12 +7,29 @@
     <div class="col-md-8">
         <div class="card shadow-lg">
             <div class="card-header bg-primary text-white">
-                <h4><i class="fas fa-plus-circle"></i> 发布拾物信息</h4>
+                <h4><i class="fas fa-plus-circle"></i> 发布信息</h4>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('publish') }}" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label for="title" class="form-label">标题</label>
+                        <label class="form-label">信息类型</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="post_type" id="type_found" value="found" checked>
+                                <label class="form-check-label" for="type_found">
+                                    <i class="fas fa-hand-holding-heart text-success"></i> 拾物（我捡到了）
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="post_type" id="type_lost" value="lost">
+                                <label class="form-check-label" for="type_lost">
+                                    <i class="fas fa-search text-danger"></i> 失物（我丢失了）
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">物品名称</label>
                         <input type="text" class="form-control" id="title" name="title" placeholder="请输入物品名称" required>
                     </div>
                     <div class="mb-3">
@@ -20,21 +37,32 @@
                         <textarea class="form-control" id="description" name="description" rows="4" placeholder="请详细描述物品特征..." required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="pickup_time" class="form-label">拾取时间</label>
+                        <label for="pickup_time" class="form-label" id="time_label">拾取时间</label>
                         <input type="datetime-local" class="form-control" id="pickup_time" name="pickup_time" required>
                     </div>
                     <div class="mb-3">
-                        <label for="location" class="form-label">拾取地点</label>
+                        <label for="location" class="form-label" id="location_label">拾取地点</label>
                         <input type="text" class="form-control" id="location" name="location" placeholder="请输入拾取地点" required>
                     </div>
                     <div class="mb-3">
-                        <label for="place_location" class="form-label">放置地点</label>
+                        <label for="place_location" class="form-label" id="place_label">放置地点</label>
                         <input type="text" class="form-control" id="place_location" name="place_location" placeholder="请输入放置地点（失主可前往领取）" required>
                     </div>
                     <div class="mb-3">
                         <label for="image" class="form-label">图片（可选）</label>
-                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                        <small class="text-muted">支持 JPG、PNG 格式，文件大小不超过 5MB</small>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center" id="drop-area" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+                            <input type="file" class="form-control d-none" id="image" name="image" accept="image/*" onchange="handleImageSelect(event)">
+                            <div id="image-preview" class="mb-2" style="display: none;">
+                                <img id="preview-img" src="" class="img-thumbnail" style="max-height: 200px; max-width: 100%;">
+                                <button type="button" class="btn btn-danger btn-sm mt-2" onclick="clearImage()">移除图片</button>
+                            </div>
+                            <div id="upload-hint">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-2"></i>
+                                <p class="text-muted">点击或拖拽图片到此处上传</p>
+                                <p class="text-muted small">支持 JPG、PNG 格式，文件大小不超过 5MB</p>
+                            </div>
+                            <span id="image-error" class="text-danger small d-none"></span>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-paper-plane"></i> 发布
@@ -45,4 +73,76 @@
         </div>
     </div>
 </div>
+
+<script>
+document.querySelectorAll('input[name="post_type"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        if (this.value === 'lost') {
+            document.getElementById('time_label').textContent = '丢失时间';
+            document.getElementById('location_label').textContent = '丢失地点';
+            document.getElementById('place_label').textContent = '联系方式';
+            document.getElementById('place_location').placeholder = '请输入联系方式（电话/微信等）';
+            document.getElementById('location').placeholder = '请输入丢失地点';
+        } else {
+            document.getElementById('time_label').textContent = '拾取时间';
+            document.getElementById('location_label').textContent = '拾取地点';
+            document.getElementById('place_label').textContent = '放置地点';
+            document.getElementById('place_location').placeholder = '请输入放置地点（失主可前往领取）';
+            document.getElementById('location').placeholder = '请输入拾取地点';
+        }
+    });
+});
+
+document.getElementById('drop-area').addEventListener('click', function() {
+    document.getElementById('image').click();
+});
+
+function handleImageSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        validateAndPreview(file);
+    }
+}
+
+function handleDrop(event) {
+    const file = event.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        validateAndPreview(file);
+    }
+}
+
+function validateAndPreview(file) {
+    const maxSize = 5 * 1024 * 1024;
+    const errorElement = document.getElementById('image-error');
+    
+    if (file.size > maxSize) {
+        errorElement.textContent = '图片大小超过5MB，请选择更小的图片';
+        errorElement.classList.remove('d-none');
+        return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+        errorElement.textContent = '请选择有效的图片文件';
+        errorElement.classList.remove('d-none');
+        return;
+    }
+    
+    errorElement.classList.add('d-none');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('preview-img').src = e.target.result;
+        document.getElementById('image-preview').style.display = 'block';
+        document.getElementById('upload-hint').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearImage() {
+    document.getElementById('image').value = '';
+    document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('upload-hint').style.display = 'block';
+    document.getElementById('image-error').classList.add('d-none');
+}
+</script>
 {% endblock %}

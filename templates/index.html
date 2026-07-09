@@ -52,7 +52,19 @@
     </form>
 </div>
 
-<h2 class="mb-3">最新拾物信息</h2>
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>最新拾物信息</h2>
+        <div class="btn-group">
+            <a href="{{ url_for('index', page=1, sort='time') }}" class="btn btn-sm {% if sort == 'time' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <i class="fas fa-clock"></i> 最新发布
+            </a>
+            <a href="{{ url_for('index', page=1, sort='hot') }}" class="btn btn-sm {% if sort == 'hot' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <i class="fas fa-fire"></i> 热门
+            </a>
+        </div>
+    </div>
+</div>
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for post in posts %}
     <div class="col">
@@ -69,11 +81,16 @@
                 <p class="card-text text-muted">{{ post.description[:50] }}{% if post.description|length > 50 %}...{% endif %}</p>
                 <div class="small text-muted">
                     <p><i class="fas fa-map-marker-alt"></i> {{ post.location }}</p>
+                    {% if current_user.is_authenticated %}
                     <p><i class="fas fa-clock"></i> {{ post.pickup_time }}</p>
+                    {% endif %}
                     <p><i class="fas fa-user"></i> {{ post.author.username }}</p>
                 </div>
             </div>
             <div class="card-footer bg-transparent">
+                <span class="badge bg-{{ 'success' if post.post_type == 'found' else 'danger' }}">
+                    {{ '拾物' if post.post_type == 'found' else '失物' }}
+                </span>
                 <span class="badge bg-{{ 'success' if post.status == 'approved' else 'warning' }}">
                     {{ '已审核' if post.status == 'approved' else '待审核' }}
                 </span>
