@@ -311,7 +311,7 @@ def edit_post(post_id):
     
     return render_template('edit_post.html', post=post)
 
-@app.route('/post/<int:post_id>/delete')
+@app.route('/post/<int:post_id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
@@ -343,17 +343,22 @@ def admin_dashboard():
         posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).all()
     elif tab == 'rejected':
         posts = Post.query.filter_by(status='rejected').order_by(Post.created_at.desc()).all()
+    elif tab == 'users':
+        posts = []
+    elif tab == 'reports':
+        posts = []
     else:
         posts = Post.query.filter_by(status='pending').order_by(Post.created_at.desc()).all()
     
     users = User.query.all()
+    reports = Report.query.order_by(Report.created_at.desc()).all() if tab == 'reports' else []
     pending_count = Post.query.filter_by(status='pending').count()
     approved_count = Post.query.filter_by(status='approved').count()
     rejected_count = Post.query.filter_by(status='rejected').count()
     total_users = User.query.count()
     
     return render_template('admin_dashboard.html', 
-                           posts=posts, users=users, tab=tab,
+                           posts=posts, users=users, reports=reports, tab=tab,
                            pending_count=pending_count,
                            approved_count=approved_count,
                            rejected_count=rejected_count,
@@ -385,7 +390,7 @@ def reject_post(post_id):
     flash('已拒绝审核', 'success')
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/admin/user/<int:user_id>/delete')
+@app.route('/admin/user/<int:user_id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_user(user_id):
     if current_user.role != 'admin':
@@ -502,6 +507,39 @@ def batch_review_posts():
     
     return redirect(url_for('admin_dashboard', tab='pending'))
 
+@app.route('/admin/posts/batch-delete', methods=['POST'])
+@login_required
+def batch_delete_posts():
+    if current_user.role != 'admin':
+        flash('无权执行此操作', 'danger')
+        return redirect(url_for('index'))
+    
+    post_ids = request.form.get('post_ids', '')
+    tab = request.form.get('tab', 'approved')
+    
+    if not post_ids:
+        flash('请选择要删除的信息', 'warning')
+        return redirect(url_for('admin_dashboard', tab=tab))
+    
+    post_id_list = [int(id.strip()) for id in post_ids.split(',') if id.strip().isdigit()]
+    deleted_count = 0
+    
+    for post_id in post_id_list:
+        post = Post.query.get(post_id)
+        if not post:
+            continue
+        
+        db.session.delete(post)
+        deleted_count += 1
+    
+    if deleted_count > 0:
+        db.session.commit()
+        flash(f'成功删除 {deleted_count} 条信息', 'success')
+    else:
+        flash('未删除任何信息', 'warning')
+    
+    return redirect(url_for('admin_dashboard', tab=tab))
+
 @app.route('/post/<int:post_id>/report', methods=['POST'])
 @login_required
 def report_post(post_id):
@@ -542,8 +580,10 @@ def admin_reports():
     reports = Report.query.order_by(Report.created_at.desc()).all()
     pending_count = Report.query.filter_by(status='pending').count()
     
-    return render_template('admin_reports.html', 
+    return render_template('admin_dashboard.html', 
                            reports=reports, 
+                           posts=[], users=[],
+                           tab='reports',
                            pending_count=pending_count,
                            approved_count=Post.query.filter_by(status='approved').count(),
                            rejected_count=Post.query.filter_by(status='rejected').count(),

@@ -4,13 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/校园失物招领.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/校园失物招领.iml" afterDir="false" />
+    <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="4">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/day3_output/app.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/day3_output/templates/base.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/day3_output/templates/login.html" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/instance/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/lost_found.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/功能.md" beforeDir="false" afterPath="$PROJECT_DIR$/功能.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/lost_found.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/admin_dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/admin_dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/post_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/post_detail.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,6 +40,9 @@
   &quot;associatedIndex&quot;: 5
 }</component>
   <component name="ProjectId" id="3G8EVh8EPsSLgO8jRFOnU70XzEh" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -47,8 +53,9 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "feature/admin",
-    "last_opened_file_path": "D:/Users/wen/PycharmProjects/Campus_Lost_Found_System"
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/Users/wen/PycharmProjects/Campus_Lost_Found_System",
+    "node.js.selected.package.tslint": "(autodetect)"
   }
 }]]></component>
   <component name="SharedIndexes">

@@ -53,12 +53,36 @@
     <li class="nav-item">
         <a class="nav-link {% if tab == 'users' %}active{% endif %}" href="{{ url_for('admin_dashboard', tab='users') }}">用户管理</a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'reports' %}active{% endif %}" href="{{ url_for('admin_dashboard', tab='reports') }}">举报管理</a>
+    </li>
 </ul>
 
+<form id="batchDeleteForm" action="{{ url_for('batch_delete_users') }}" method="POST">
+    <input type="hidden" name="user_ids" id="user_ids">
+</form>
+
+<form id="batchReviewForm" action="{{ url_for('batch_review_posts') }}" method="POST">
+    <input type="hidden" name="post_ids" id="review_post_ids">
+    <input type="hidden" name="action" id="review_action">
+</form>
+
+<form id="batchDeletePostsForm" action="{{ url_for('batch_delete_posts') }}" method="POST">
+    <input type="hidden" name="post_ids" id="delete_post_ids">
+    <input type="hidden" name="tab" id="delete_post_tab">
+</form>
+
 {% if tab == 'users' %}
+<div class="d-flex justify-content-between mb-3">
+    <h4>用户列表</h4>
+    <button type="button" class="btn btn-danger btn-sm" onclick="batchDeleteUsers()">
+        <i class="fas fa-trash"></i> 批量删除选中
+    </button>
+</div>
 <table class="table table-hover">
     <thead>
         <tr>
+            <th><input type="checkbox" id="selectAllUsers" onclick="toggleSelectAllUsers()"></th>
             <th>ID</th>
             <th>用户名</th>
             <th>角色</th>
@@ -69,6 +93,7 @@
     <tbody>
         {% for user in users %}
         <tr>
+            <td><input type="checkbox" class="userCheckbox" value="{{ user.id }}" {% if user.role == 'admin' %}disabled{% endif %}></td>
             <td>{{ user.id }}</td>
             <td>{{ user.username }}</td>
             <td><span class="badge bg-{{ 'danger' if user.role == 'admin' else 'secondary' }}">{{ user.role }}</span></td>
@@ -76,18 +101,86 @@
             <td>
                 {% if user.role != 'admin' %}
                 <a href="{{ url_for('promote_user', user_id=user.id) }}" class="btn btn-warning btn-sm">提升管理员</a>
-                <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm ms-2">删除</a>
+                <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeleteUser('{{ user.username }}', {{ user.id }})">删除</button>
                 {% endif %}
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-{% else %}
+{% elif tab == 'reports' %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>帖子标题</th>
+                <th>举报人</th>
+                <th>举报原因</th>
+                <th>举报时间</th>
+                <th>状态</th>
+                <th>处理结果</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ report.id }}</td>
+                <td><a href="{{ url_for('post_detail', post_id=report.post.id) }}">{{ report.post.title }}</a></td>
+                <td>{{ report.reporter.username }}</td>
+                <td>{{ report.reason[:50] }}{% if report.reason|length > 50 %}...{% endif %}</td>
+                <td>{{ report.created_at }}</td>
+                <td><span class="badge bg-{{ 'danger' if report.status == 'pending' else 'success' }}">{{ '待处理' if report.status == 'pending' else '已处理' }}</span></td>
+                <td>
+                    {% if report.result == 'violation' %}
+                    <span class="badge bg-danger">确认违规</span>
+                    {% elif report.result == 'rejected' %}
+                    <span class="badge bg-secondary">驳回举报</span>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if report.status == 'pending' %}
+                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmHandleReport({{ report.id }}, 'violation', '{{ report.post.title }}')">确认违规</button>
+                    <button type="button" class="btn btn-secondary btn-sm ms-2" onclick="confirmHandleReport({{ report.id }}, 'rejected', '{{ report.post.title }}')">驳回</button>
+                    {% else %}
+                    {% if report.handler %}
+                    <small class="text-muted">由 {{ report.handler.username }} 处理</small>
+                    {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if not reports %}
+<div class="col-12 text-center py-8">
+    <i class="fas fa-inbox fa-5x text-muted mb-3"></i>
+    <p class="text-muted">暂无举报记录</p>
+</div>
+{% endif %}
+{% elif tab == 'pending' %}
+<div class="d-flex justify-content-between mb-3">
+    <h4>待审核列表</h4>
+    <div class="btn-group">
+        <button type="button" class="btn btn-success btn-sm" onclick="batchReview('approve')">
+            <i class="fas fa-check"></i> 批量通过
+        </button>
+        <button type="button" class="btn btn-danger btn-sm ms-2" onclick="batchReview('reject')">
+            <i class="fas fa-times"></i> 批量拒绝
+        </button>
+    </div>
+</div>
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for post in posts %}
     <div class="col">
         <div class="card h-100 shadow">
+            <div class="card-header">
+                <input type="checkbox" class="postCheckbox" value="{{ post.id }}">
+            </div>
             {% if post.image %}
             <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片" style="height: 150px; object-fit: cover;">
             {% else %}
@@ -104,13 +197,50 @@
                 </small>
             </div>
             <div class="card-footer bg-transparent">
-                {% if tab == 'pending' %}
                 <a href="{{ url_for('approve_post', post_id=post.id) }}" class="btn btn-success btn-sm">通过</a>
                 <a href="{{ url_for('reject_post', post_id=post.id) }}" class="btn btn-danger btn-sm ms-2">拒绝</a>
-                {% else %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-8">
+        <i class="fas fa-inbox fa-5x text-muted mb-3"></i>
+        <p class="text-muted">暂无数据</p>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="d-flex justify-content-between mb-3">
+    <h4>{{ '已通过' if tab == 'approved' else '已拒绝' }}列表</h4>
+    <button type="button" class="btn btn-danger btn-sm" onclick="batchDeletePosts('{{ tab }}')">
+        <i class="fas fa-trash"></i> 批量删除选中
+    </button>
+</div>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for post in posts %}
+    <div class="col">
+        <div class="card h-100 shadow">
+            <div class="card-header">
+                <input type="checkbox" class="postCheckbox" value="{{ post.id }}">
+            </div>
+            {% if post.image %}
+            <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片" style="height: 150px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                <i class="fas fa-image fa-3x text-muted"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text text-muted">{{ post.description[:30] }}{% if post.description|length > 30 %}...{% endif %}</p>
+                <small class="text-muted">
+                    <p><i class="fas fa-map-marker-alt"></i> {{ post.location }}</p>
+                    <p><i class="fas fa-user"></i> {{ post.author.username }}</p>
+                </small>
+            </div>
+            <div class="card-footer bg-transparent">
                 <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-primary btn-sm">查看</a>
-                <a href="{{ url_for('delete_post', post_id=post.id) }}" class="btn btn-danger btn-sm ms-2">删除</a>
-                {% endif %}
+                <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeletePost('{{ post.title }}', {{ post.id }})">删除</button>
             </div>
         </div>
     </div>
@@ -122,4 +252,129 @@
     {% endfor %}
 </div>
 {% endif %}
+
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmModalLabel"><i class="fas fa-exclamation-triangle"></i> 确认操作</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmBtn">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="singleDeleteForm" method="POST" style="display: none;">
+</form>
+
+<form id="handleReportForm" action="" method="POST">
+    <input type="hidden" name="result" id="report_result">
+</form>
+
+<script>
+let confirmCallback = null;
+
+function toggleSelectAllUsers() {
+    const checkboxes = document.querySelectorAll('.userCheckbox');
+    const selectAll = document.getElementById('selectAllUsers');
+    checkboxes.forEach(cb => {
+        if (!cb.disabled) cb.checked = selectAll.checked;
+    });
+}
+
+function showConfirm(message, callback) {
+    document.getElementById('confirmMessage').textContent = message;
+    confirmCallback = callback;
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    modal.show();
+}
+
+document.getElementById('confirmBtn').addEventListener('click', function() {
+    if (confirmCallback) {
+        confirmCallback();
+        confirmCallback = null;
+    }
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+    modal.hide();
+});
+
+function batchDeleteUsers() {
+    const checked = document.querySelectorAll('.userCheckbox:checked');
+    if (checked.length === 0) {
+        alert('请选择要删除的用户');
+        return;
+    }
+    showConfirm(`确定删除选中的 ${checked.length} 个用户？此操作不可撤销。`, function() {
+        const ids = Array.from(checked).map(cb => cb.value).join(',');
+        document.getElementById('user_ids').value = ids;
+        document.getElementById('batchDeleteForm').submit();
+    });
+}
+
+function batchReview(action) {
+    const checked = document.querySelectorAll('.postCheckbox:checked');
+    if (checked.length === 0) {
+        alert('请选择要审核的信息');
+        return;
+    }
+    const actionText = action === 'approve' ? '通过' : '拒绝';
+    showConfirm(`确定${actionText}选中的 ${checked.length} 条信息？`, function() {
+        const ids = Array.from(checked).map(cb => cb.value).join(',');
+        document.getElementById('review_post_ids').value = ids;
+        document.getElementById('review_action').value = action;
+        document.getElementById('batchReviewForm').submit();
+    });
+}
+
+function batchDeletePosts(tab) {
+    const checked = document.querySelectorAll('.postCheckbox:checked');
+    if (checked.length === 0) {
+        alert('请选择要删除的信息');
+        return;
+    }
+    showConfirm(`确定删除选中的 ${checked.length} 条信息？此操作不可撤销。`, function() {
+        const ids = Array.from(checked).map(cb => cb.value).join(',');
+        document.getElementById('delete_post_ids').value = ids;
+        document.getElementById('delete_post_tab').value = tab;
+        document.getElementById('batchDeletePostsForm').submit();
+    });
+}
+
+function confirmDeleteUser(username, userId) {
+    showConfirm(`确定删除用户「${username}」？此操作不可撤销。`, function() {
+        const form = document.getElementById('singleDeleteForm');
+        form.action = '{{ url_for('delete_user', user_id=0) }}'.replace('/0', '/' + userId);
+        form.method = 'POST';
+        form.submit();
+    });
+}
+
+function confirmDeletePost(title, postId) {
+    showConfirm(`确定删除信息「${title}」？此操作不可撤销。`, function() {
+        const form = document.getElementById('singleDeleteForm');
+        form.action = '{{ url_for('delete_post', post_id=0) }}'.replace('/0', '/' + postId);
+        form.method = 'POST';
+        form.submit();
+    });
+}
+
+function confirmHandleReport(reportId, result, postTitle) {
+    const actionText = result === 'violation' ? '确认违规' : '驳回举报';
+    const detailText = result === 'violation' ? '帖子将被拒绝' : '';
+    const message = detailText ? `确定${actionText}「${postTitle}」？${detailText}。` : `确定${actionText}「${postTitle}」？`;
+    showConfirm(message, function() {
+        const form = document.getElementById('handleReportForm');
+        form.action = '{{ url_for('handle_report', report_id=0) }}'.replace('/0', '/' + reportId);
+        document.getElementById('report_result').value = result;
+        form.submit();
+    });
+}
+</script>
 {% endblock %}

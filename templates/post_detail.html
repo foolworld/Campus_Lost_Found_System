@@ -72,6 +72,11 @@
                 </a>
                 {% endif %}
                 {% endif %}
+                {% if current_user.id != post.author_id %}
+                <button type="button" class="btn btn-outline-danger float-end" data-bs-toggle="modal" data-bs-target="#reportModal">
+                    <i class="fas fa-flag"></i> 举报
+                </button>
+                {% endif %}
                 {% endif %}
                 <a href="{{ url_for('index') }}" class="btn btn-secondary float-end">返回列表</a>
             </div>
@@ -126,7 +131,6 @@
         {% endif %}
     </div>
 </div>
-{% endblock %}
 
 <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
@@ -140,6 +144,32 @@
                 <img src="{{ url_for('static', filename='images/' + post.image) }}" class="img-fluid" alt="物品大图">
                 {% endif %}
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="reportModalLabel"><i class="fas fa-flag"></i> 举报此信息</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('report_post', post_id=post.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="report_reason" class="form-label">举报原因</label>
+                        <textarea class="form-control" id="report_reason" name="reason" rows="4" placeholder="请描述您举报的原因，如：虚假信息、广告内容、违规内容等..." required></textarea>
+                    </div>
+                    <div class="alert alert-info small">
+                        <i class="fas fa-info-circle"></i> 举报后管理员将尽快处理，您的举报信息将被保密。
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger">提交举报</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -178,3 +208,4 @@ function copyLink() {
     });
 }
 </script>
+{% endblock %}
