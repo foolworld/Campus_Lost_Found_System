@@ -1,0 +1,35 @@
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Flask 实例文件夹
+instance/
+
+# SQLite 数据库（可选，如果你想上传数据库则删除此行）
+*.db
+*.db-journal
+
+# 上传的图片（可选，如果你不想上传大图片则保留）
+static/images/
+
+# IDE 配置
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 虚拟环境
+venv/
+env/
+.env
+
+# 日志文件
+*.log

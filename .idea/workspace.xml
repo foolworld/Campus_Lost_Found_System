@@ -5,15 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="4">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/static/images/1783390111011.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/数据库.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/文档/校园失物招领系统.pptx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/文档/校园失物招领系统需求答辩.pptx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/文档/每日任务完成与计划填报模板.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/文档/每日计划表/7月7日计划表.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/文档/每日计划表/7月8日计划表.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/文档/联想截图_20260706093017.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/文档/需求答辩.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/文档/需求答辩.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/day3_output/app.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/day3_output/templates/base.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/day3_output/templates/login.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/instance/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/lost_found.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/lost_found.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/admin_dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/admin_dashboard.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/post_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/post_detail.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,12 +33,12 @@
     &quot;assignee&quot;: &quot;WENXXHH&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/foolworld/Campus_Lost_Found_System.git&quot;,
-    &quot;accountId&quot;: &quot;18aba253-143a-4893-b42c-283a9d8823c0&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/foolworld/Campus_Lost_Found_System.git",
+    "accountId": "8712cfa3-acc6-41a3-beba-0a768334175f"
   }
-}</component>
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -55,13 +58,18 @@
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
     "last_opened_file_path": "D:/Users/wen/PycharmProjects/Campus_Lost_Found_System",
-    "node.js.selected.package.tslint": "(autodetect)"
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-4e2b1448bda8-9a97661f3031-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.27397.106" />
+        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-PY-252.26830.99" />
+        <option value="bundled-python-sdk-164cda30dcd9-0af03a5fa574-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.26830.99" />
       </set>
     </attachedChunks>
   </component>
@@ -72,8 +80,12 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1783344821933</updated>
+      <workItem from="1783643503811" duration="634000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
