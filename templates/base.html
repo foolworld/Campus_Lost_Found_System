@@ -25,6 +25,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('search') }}">搜索</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('notices_page') }}">公告</a>
+                    </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('publish') }}">发布信息</a>
@@ -81,5 +84,59 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <div class="modal fade" id="noticeModal" tabindex="-1" aria-labelledby="noticeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="noticeModalLabel"><i class="fas fa-bullhorn"></i> 系统公告</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="noticeContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="dontShowAgain">
+                        <label class="form-check-label" for="dontShowAgain">不再提醒</label>
+                    </div>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">我知道了</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dontShowAgain = localStorage.getItem('dontShowNotice');
+        if (dontShowAgain === 'true') return;
+        
+        fetch('/api/notices')
+            .then(response => response.json())
+            .then(data => {
+                if (data.notices && data.notices.length > 0) {
+                    const lastNotice = data.notices[0];
+                    const noticeHtml = `
+                        <h4>${lastNotice.title}</h4>
+                        <p class="mt-2">${lastNotice.content}</p>
+                        <small class="text-muted">发布时间：${lastNotice.created_at}</small>
+                    `;
+                    document.getElementById('noticeContent').innerHTML = noticeHtml;
+                    
+                    const lastShown = localStorage.getItem('lastNoticeId');
+                    if (lastShown !== String(lastNotice.id)) {
+                        const modal = new bootstrap.Modal(document.getElementById('noticeModal'));
+                        modal.show();
+                        localStorage.setItem('lastNoticeId', lastNotice.id);
+                    }
+                }
+            })
+            .catch(err => console.error('Failed to load notices:', err));
+    });
+    
+    document.getElementById('dontShowAgain').addEventListener('change', function() {
+        localStorage.setItem('dontShowNotice', String(this.checked));
+    });
+    </script>
 </body>
 </html>

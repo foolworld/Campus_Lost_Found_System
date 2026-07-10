@@ -56,6 +56,9 @@
     <li class="nav-item">
         <a class="nav-link {% if tab == 'reports' %}active{% endif %}" href="{{ url_for('admin_dashboard', tab='reports') }}">举报管理</a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'notices' %}active{% endif %}" href="{{ url_for('admin_notices') }}">公告管理</a>
+    </li>
 </ul>
 
 <form id="batchDeleteForm" action="{{ url_for('batch_delete_users') }}" method="POST">
@@ -250,6 +253,71 @@
         <p class="text-muted">暂无数据</p>
     </div>
     {% endfor %}
+</div>
+{% endif %}
+
+{% if tab == 'notices' %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5><i class="fas fa-bullhorn"></i> 发布新公告</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_notice') }}">
+            <div class="mb-3">
+                <label for="notice_title" class="form-label">公告标题</label>
+                <input type="text" class="form-control" id="notice_title" name="title" placeholder="请输入公告标题" required>
+            </div>
+            <div class="mb-3">
+                <label for="notice_content" class="form-label">公告内容</label>
+                <textarea class="form-control" id="notice_content" name="content" rows="4" placeholder="请输入公告内容..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">发布公告</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5><i class="fas fa-list"></i> 公告列表</h5>
+    </div>
+    <div class="card-body">
+        {% if notices %}
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>标题</th>
+                    <th>内容</th>
+                    <th>状态</th>
+                    <th>发布时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for notice in notices %}
+                <tr>
+                    <td>{{ notice.id }}</td>
+                    <td>{{ notice.title }}</td>
+                    <td>{{ notice.content[:50] }}{% if notice.content|length > 50 %}...{% endif %}</td>
+                    <td><span class="badge bg-{{ 'success' if notice.is_active else 'secondary' }}">{{ '启用' if notice.is_active else '禁用' }}</span></td>
+                    <td>{{ notice.created_at }}</td>
+                    <td>
+                        <a href="{{ url_for('toggle_notice', notice_id=notice.id) }}" class="btn btn-{{ 'warning' if notice.is_active else 'success' }} btn-sm">
+                            {{ '禁用' if notice.is_active else '启用' }}
+                        </a>
+                        <a href="{{ url_for('delete_notice', notice_id=notice.id) }}" class="btn btn-danger btn-sm ms-2" onclick="return confirm('确定删除此公告？')">删除</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-bullhorn fa-3x text-muted"></i>
+            <p class="text-muted mt-2">暂无公告</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endif %}
 

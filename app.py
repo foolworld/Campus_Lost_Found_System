@@ -76,6 +76,15 @@ class Comment(db.Model):
     post = db.relationship('Post', backref=db.backref('comments', lazy=True))
     author = db.relationship('User', backref=db.backref('comments', lazy=True))
 
+
+class Notice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now)
+    updated_at = db.Column(db.DateTime)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -167,8 +176,11 @@ def index():
     if current_user.is_authenticated and current_user.role == 'admin':
         is_admin = True
     
+    latest_notice = Notice.query.filter_by(is_active=True).order_by(Notice.created_at.desc()).first()
+    
     return render_template('index.html', posts=posts.items, page=page, total_pages=posts.pages, 
-                           total_posts=total_posts, total_users=total_users, sort=sort, is_admin=is_admin)
+                           total_posts=total_posts, total_users=total_users, sort=sort, is_admin=is_admin,
+                           latest_notice=latest_notice)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -300,7 +312,7 @@ def post_detail(post_id):
                 results.sort(key=lambda x: x[1], reverse=True)
                 similar_posts = [p for p, _ in results[:3]]
     except Exception as e:
-        print(f"Error computing similar posts: {e}")
+        print(f"Error computing similar posts: {e} - app.py:315")
 
     comments = []
     guest_token = request.cookies.get('guest_token')
@@ -309,10 +321,18 @@ def post_detail(post_id):
         if current_user.id == post.author_id or current_user.role == 'admin':
             comments = Comment.query.filter_by(post_id=post_id).order_by(Comment.created_at.desc()).all()
         else:
-            comments = Comment.query.filter_by(post_id=post_id, author_id=current_user.id).order_by(Comment.created_at.desc()).all()
+            comments = Comment.query.filter(
+                Comment.post_id == post_id,
+                (Comment.author_id == current_user.id) | (Comment.author_id == post.author_id)
+            ).order_by(Comment.created_at.desc()).all()
     else:
         if guest_token:
-            comments = Comment.query.filter_by(post_id=post_id, guest_token=guest_token).order_by(Comment.created_at.desc()).all()
+            comments = Comment.query.filter(
+                Comment.post_id == post_id,
+                (Comment.guest_token == guest_token) | (Comment.author_id == post.author_id)
+            ).order_by(Comment.created_at.desc()).all()
+        else:
+            comments = Comment.query.filter_by(post_id=post_id, author_id=post.author_id).order_by(Comment.created_at.desc()).all()
     
     return render_template('post_detail.html', post=post, similar_posts=similar_posts, comments=comments)
 
@@ -745,6 +765,94 @@ def handle_report(report_id):
         flash('已驳回举报', 'success')
     
     return redirect(url_for('admin_reports'))
+
+
+@app.route('/admin/notices')
+@login_required
+def admin_notices():
+    if current_user.role != 'admin':
+        flash('无权访问公告管理', 'danger')
+        return redirect(url_for('index'))
+    
+    notices = Notice.query.order_by(Notice.created_at.desc()).all()
+    return render_template('admin_dashboard.html', 
+                           notices=notices, 
+                           posts=[], users=[], reports=[],
+                           tab='notices',
+                           pending_count=Post.query.filter_by(status='pending').count(),
+                           approved_count=Post.query.filter_by(status='approved').count(),
+                           rejected_count=Post.query.filter_by(status='rejected').count(),
+                           total_users=User.query.count())
+
+
+@app.route('/admin/notice/add', methods=['POST'])
+@login_required
+def add_notice():
+    if current_user.role != 'admin':
+        flash('无权执行此操作', 'danger')
+        return redirect(url_for('index'))
+    
+    title = request.form.get('title', '').strip()
+    content = request.form.get('content', '').strip()
+    
+    if not title or not content:
+        flash('请填写公告标题和内容', 'danger')
+        return redirect(url_for('admin_notices'))
+    
+    notice = Notice(title=title, content=content)
+    db.session.add(notice)
+    db.session.commit()
+    
+    flash('公告发布成功', 'success')
+    return redirect(url_for('admin_notices'))
+
+
+@app.route('/admin/notice/<int:notice_id>/toggle')
+@login_required
+def toggle_notice(notice_id):
+    if current_user.role != 'admin':
+        flash('无权执行此操作', 'danger')
+        return redirect(url_for('index'))
+    
+    notice = Notice.query.get_or_404(notice_id)
+    notice.is_active = not notice.is_active
+    db.session.commit()
+    
+    flash(f'公告已{"启用" if notice.is_active else "禁用"}', 'success')
+    return redirect(url_for('admin_notices'))
+
+
+@app.route('/admin/notice/<int:notice_id>/delete')
+@login_required
+def delete_notice(notice_id):
+    if current_user.role != 'admin':
+        flash('无权执行此操作', 'danger')
+        return redirect(url_for('index'))
+    
+    notice = Notice.query.get_or_404(notice_id)
+    db.session.delete(notice)
+    db.session.commit()
+    
+    flash('公告已删除', 'success')
+    return redirect(url_for('admin_notices'))
+
+
+@app.route('/api/notices')
+def get_notices():
+    notices = Notice.query.filter_by(is_active=True).order_by(Notice.created_at.desc()).all()
+    return {'notices': [{
+        'id': notice.id,
+        'title': notice.title,
+        'content': notice.content,
+        'created_at': notice.created_at.strftime('%Y-%m-%d %H:%M')
+    } for notice in notices]}
+
+
+@app.route('/notices')
+def notices_page():
+    notices = Notice.query.filter_by(is_active=True).order_by(Notice.created_at.desc()).all()
+    return render_template('notices.html', notices=notices)
+
 
 def create_sample_data():
     sample_users = [

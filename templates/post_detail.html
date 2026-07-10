@@ -32,13 +32,16 @@
                     {% if current_user.is_authenticated %}
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
-                            <i class="fas fa-map-marker-alt text-primary"></i> 拾取地点：{{ post.location }}
+                            <i class="fas fa-map-marker-alt text-primary"></i> 
+                            {{ '拾取地点' if post.post_type == 'found' else '丢失地点' }}：{{ post.location }}
                         </li>
                         <li class="list-group-item">
-                            <i class="fas fa-map-pin text-success"></i> 放置地点：{{ post.place_location }}
+                            <i class="fas fa-map-pin text-success"></i> 
+                            {{ '放置地点' if post.post_type == 'found' else '联系方式' }}：{{ post.place_location }}
                         </li>
                         <li class="list-group-item">
-                            <i class="fas fa-clock text-info"></i> 拾取时间：{{ post.pickup_time }}
+                            <i class="fas fa-clock text-info"></i> 
+                            {{ '拾取时间' if post.post_type == 'found' else '丢失时间' }}：{{ post.pickup_time }}
                         </li>
                         <li class="list-group-item">
                             <i class="fas fa-calendar text-muted"></i> 发布时间：{{ post.created_at }}
@@ -46,7 +49,7 @@
                     </ul>
                     {% else %}
                     <div class="alert alert-info">
-                        <i class="fas fa-lock"></i> 登录后查看完整信息，包括放置地点和联系方式
+                        <i class="fas fa-lock"></i> 登录后查看完整信息
                         <a href="{{ url_for('login') }}" class="btn btn-primary mt-2">立即登录</a>
                     </div>
                     {% endif %}
