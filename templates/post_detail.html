@@ -132,6 +132,71 @@
     </div>
 </div>
 
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h5><i class="fas fa-comments"></i> 留言板</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_comment', post_id=post.id) }}">
+                {% if not current_user.is_authenticated %}
+                <div class="mb-3">
+                    <label for="guest_name" class="form-label">您的昵称</label>
+                    <input type="text" class="form-control" id="guest_name" name="guest_name" placeholder="请输入昵称（可选）" maxlength="50">
+                </div>
+                {% endif %}
+                <div class="mb-3">
+                    <label for="comment_content" class="form-label">留言内容</label>
+                    <textarea class="form-control" id="comment_content" name="content" rows="3" placeholder="请输入留言内容..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">提交留言</button>
+            </form>
+            
+            <div class="mt-4">
+                <div class="alert alert-info small">
+                    <i class="fas fa-info-circle"></i> 
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.id == post.author_id or current_user.role == 'admin' %}
+                            您可以查看所有留言。
+                        {% else %}
+                            您只能看到自己的留言，帖子发布者和管理员可以看到所有留言。
+                        {% endif %}
+                    {% else %}
+                        游客留言仅自己、帖子发布者和管理员可见。
+                    {% endif %}
+                </div>
+                
+                {% if comments %}
+                <div class="list-group">
+                    {% for comment in comments %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="fw-bold">
+                                    {% if comment.author %}
+                                    {{ comment.author.username }}
+                                    {% else %}
+                                    {{ comment.guest_name or '游客' }}
+                                    {% endif %}
+                                </h6>
+                                <p class="mb-1">{{ comment.content }}</p>
+                            </div>
+                            <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-comments fa-3x text-muted"></i>
+                    <p class="text-muted mt-2">暂无留言</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">

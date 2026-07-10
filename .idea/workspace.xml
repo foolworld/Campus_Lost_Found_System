@@ -5,18 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="4">
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/images/1783390111011.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/数据库.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/文档/校园失物招领系统.pptx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/文档/校园失物招领系统需求答辩.pptx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/文档/每日任务完成与计划填报模板.docx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/文档/每日计划表/7月7日计划表.docx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/文档/每日计划表/7月8日计划表.docx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/文档/联想截图_20260706093017.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/文档/需求答辩.docx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/文档/需求答辩.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/instance/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/lost_found.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/lost_found.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/post_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/post_detail.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,7 +73,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1783344821933</updated>
-      <workItem from="1783643503811" duration="634000" />
+      <workItem from="1783643503811" duration="1639000" />
     </task>
     <servers />
   </component>

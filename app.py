@@ -63,6 +63,19 @@ class Report(db.Model):
     reporter = db.relationship('User', foreign_keys=[reporter_id], backref=db.backref('reported_posts', lazy=True))
     handler = db.relationship('User', foreign_keys=[handled_by], backref=db.backref('handled_reports', lazy=True))
 
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    guest_name = db.Column(db.String(50))
+    guest_token = db.Column(db.String(36))
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now)
+
+    post = db.relationship('Post', backref=db.backref('comments', lazy=True))
+    author = db.relationship('User', backref=db.backref('comments', lazy=True))
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -279,8 +292,62 @@ def post_detail(post_id):
             
             results.sort(key=lambda x: x[1], reverse=True)
             similar_posts = [p for p, _ in results[:3]]
+
+    comments = []
+    guest_token = request.cookies.get('guest_token')
     
-    return render_template('post_detail.html', post=post, similar_posts=similar_posts)
+    if current_user.is_authenticated:
+        if current_user.id == post.author_id or current_user.role == 'admin':
+            comments = Comment.query.filter_by(post_id=post_id).order_by(Comment.created_at.desc()).all()
+        else:
+            comments = Comment.query.filter_by(post_id=post_id, author_id=current_user.id).order_by(Comment.created_at.desc()).all()
+    else:
+        if guest_token:
+            comments = Comment.query.filter_by(post_id=post_id, guest_token=guest_token).order_by(Comment.created_at.desc()).all()
+    
+    return render_template('post_detail.html', post=post, similar_posts=similar_posts, comments=comments)
+
+
+@app.route('/post/<int:post_id>/comment', methods=['POST'])
+def add_comment(post_id):
+    post = Post.query.get_or_404(post_id)
+    content = request.form.get('content', '').strip()
+    
+    if not content:
+        flash('请填写留言内容', 'danger')
+        return redirect(url_for('post_detail', post_id=post_id))
+    
+    if current_user.is_authenticated:
+        comment = Comment(
+            post_id=post_id,
+            author_id=current_user.id,
+            content=content
+        )
+        db.session.add(comment)
+        db.session.commit()
+        flash('留言成功', 'success')
+    else:
+        import uuid
+        guest_name = request.form.get('guest_name', '游客').strip()
+        guest_token = request.cookies.get('guest_token')
+        if not guest_token:
+            guest_token = str(uuid.uuid4())
+        
+        comment = Comment(
+            post_id=post_id,
+            guest_name=guest_name,
+            guest_token=guest_token,
+            content=content
+        )
+        db.session.add(comment)
+        db.session.commit()
+        
+        resp = redirect(url_for('post_detail', post_id=post_id))
+        resp.set_cookie('guest_token', guest_token, max_age=30*24*60*60)
+        flash('留言成功', 'success')
+        return resp
+    
+    return redirect(url_for('post_detail', post_id=post_id))
 
 @app.route('/post/<int:post_id>/edit', methods=['GET', 'POST'])
 @login_required
