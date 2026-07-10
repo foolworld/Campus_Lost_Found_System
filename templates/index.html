@@ -10,6 +10,7 @@
     </div>
 </div>
 
+{% if is_admin %}
 <div class="row mb-4">
     <div class="col-md-6">
         <div class="card bg-success text-white">
@@ -42,6 +43,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <div class="mb-4">
     <form class="d-flex" action="{{ url_for('search') }}" method="GET">

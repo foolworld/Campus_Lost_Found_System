@@ -162,7 +162,13 @@ def index():
     
     total_posts = Post.query.filter_by(status='approved').count()
     total_users = User.query.count()
-    return render_template('index.html', posts=posts.items, page=page, total_pages=posts.pages, total_posts=total_posts, total_users=total_users, sort=sort)
+    
+    is_admin = False
+    if current_user.is_authenticated and current_user.role == 'admin':
+        is_admin = True
+    
+    return render_template('index.html', posts=posts.items, page=page, total_pages=posts.pages, 
+                           total_posts=total_posts, total_users=total_users, sort=sort, is_admin=is_admin)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -274,24 +280,27 @@ def publish():
 def post_detail(post_id):
     post = Post.query.get_or_404(post_id)
     similar_posts = []
-    if post.status == 'approved':
-        all_approved = Post.query.filter(Post.status == 'approved', Post.id != post_id).all()
-        if all_approved:
-            documents = [f"{p.title} {p.description} {p.location}" for p in all_approved]
-            idf = compute_idf(documents)
-            query_tokens = tokenize(f"{post.title} {post.description}")
-            query_tfidf = compute_tfidf(query_tokens, idf)
-            
-            results = []
-            for p in all_approved:
-                doc_tokens = tokenize(f"{p.title} {p.description}")
-                doc_tfidf = compute_tfidf(doc_tokens, idf)
-                similarity = cosine_similarity(query_tfidf, doc_tfidf)
-                if similarity > 0.1:
-                    results.append((p, similarity))
-            
-            results.sort(key=lambda x: x[1], reverse=True)
-            similar_posts = [p for p, _ in results[:3]]
+    try:
+        if post.status == 'approved':
+            all_approved = Post.query.filter(Post.status == 'approved', Post.id != post_id).all()
+            if all_approved:
+                documents = [f"{p.title} {p.description} {p.location}" for p in all_approved]
+                idf = compute_idf(documents)
+                query_tokens = tokenize(f"{post.title} {post.description}")
+                query_tfidf = compute_tfidf(query_tokens, idf)
+                
+                results = []
+                for p in all_approved:
+                    doc_tokens = tokenize(f"{p.title} {p.description}")
+                    doc_tfidf = compute_tfidf(doc_tokens, idf)
+                    similarity = cosine_similarity(query_tfidf, doc_tfidf)
+                    if similarity > 0.1:
+                        results.append((p, similarity))
+                
+                results.sort(key=lambda x: x[1], reverse=True)
+                similar_posts = [p for p, _ in results[:3]]
+    except Exception as e:
+        print(f"Error computing similar posts: {e}")
 
     comments = []
     guest_token = request.cookies.get('guest_token')
@@ -348,6 +357,54 @@ def add_comment(post_id):
         return resp
     
     return redirect(url_for('post_detail', post_id=post_id))
+
+@app.route('/comment/<int:comment_id>/delete', methods=['GET', 'POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    
+    if current_user.role != 'admin':
+        flash('无权删除此留言', 'danger')
+        return redirect(url_for('post_detail', post_id=comment.post_id))
+    
+    post_id = comment.post_id
+    db.session.delete(comment)
+    db.session.commit()
+    flash('留言已删除', 'success')
+    
+    post = Post.query.get(post_id)
+    if post:
+        return redirect(url_for('post_detail', post_id=post_id))
+    else:
+        return redirect(url_for('index'))
+
+@app.route('/comment/<int:comment_id>/edit', methods=['GET', 'POST'])
+def edit_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    post_id = comment.post_id
+    
+    if current_user.is_authenticated:
+        if comment.author_id != current_user.id and current_user.role != 'admin':
+            flash('无权编辑此留言', 'danger')
+            return redirect(url_for('post_detail', post_id=post_id))
+    else:
+        guest_token = request.cookies.get('guest_token')
+        if not guest_token or not comment.guest_token or comment.guest_token != guest_token:
+            flash('无权编辑此留言', 'danger')
+            return redirect(url_for('post_detail', post_id=post_id))
+    
+    if request.method == 'POST':
+        content = request.form.get('content', '').strip()
+        if not content:
+            flash('留言内容不能为空', 'danger')
+            return redirect(url_for('edit_comment', comment_id=comment_id))
+        
+        comment.content = content
+        db.session.commit()
+        flash('留言已修改', 'success')
+        return redirect(url_for('post_detail', post_id=post_id))
+    
+    return render_template('edit_comment.html', comment=comment)
 
 @app.route('/post/<int:post_id>/edit', methods=['GET', 'POST'])
 @login_required

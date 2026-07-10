@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}编辑留言 - 校园失物招领{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5><i class="fas fa-edit"></i> 编辑留言</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="comment_content" class="form-label">留言内容</label>
+                <textarea class="form-control" id="comment_content" name="content" rows="4" required>{{ comment.content }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">保存修改</button>
+            <a href="{{ url_for('post_detail', post_id=comment.post_id) }}" class="btn btn-secondary ms-2">取消</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
