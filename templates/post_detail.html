@@ -141,13 +141,14 @@
             <h5><i class="fas fa-comments"></i> 留言板</h5>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('add_comment', post_id=post.id) }}">
+            <form method="POST" action="{{ url_for('add_comment', post_id=post.id) }}" id="mainCommentForm">
                 {% if not current_user.is_authenticated %}
                 <div class="mb-3">
                     <label for="guest_name" class="form-label">您的昵称</label>
                     <input type="text" class="form-control" id="guest_name" name="guest_name" placeholder="请输入昵称（可选）" maxlength="50">
                 </div>
                 {% endif %}
+                <input type="hidden" name="parent_id" id="main_parent_id" value="">
                 <div class="mb-3">
                     <label for="comment_content" class="form-label">留言内容</label>
                     <textarea class="form-control" id="comment_content" name="content" rows="3" placeholder="请输入留言内容..." required></textarea>
@@ -172,6 +173,7 @@
                 {% if comments %}
                 <div class="list-group">
                     {% for comment in comments %}
+                    {% if not comment.parent_id %}
                     <div class="list-group-item">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
@@ -181,12 +183,17 @@
                                     {% else %}
                                     {{ comment.guest_name or '游客' }}
                                     {% endif %}
+                                    <small class="text-muted ms-2">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                                 </h6>
                                 <p class="mb-1">{{ comment.content }}</p>
                             </div>
-                            <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                         </div>
                         <div class="mt-2">
+                            {% if current_user.is_authenticated or (comment.guest_token and comment.guest_token == request.cookies.get('guest_token')) %}
+                            <button type="button" class="btn btn-sm btn-outline-primary me-2 reply-comment-btn" data-comment-id="{{ comment.id }}" data-username="{% if comment.author %}{{ comment.author.username|e }}{% else %}{{ (comment.guest_name or '游客')|e }}{% endif %}">
+                                <i class="fas fa-reply"></i> 回复
+                            </button>
+                            {% endif %}
                             {% if current_user.is_authenticated %}
                                 {% if comment.author_id == current_user.id or current_user.role == 'admin' %}
                                 <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" class="btn btn-sm btn-warning me-2">
@@ -206,7 +213,38 @@
                             </a>
                             {% endif %}
                         </div>
+                        <!-- 回复列表 -->
+                        {% if comment.replies %}
+                        <div class="mt-3 ms-4 ps-3 border-start border-primary">
+                            {% for reply in comment.replies %}
+                            <div class="mb-2 p-2 bg-light rounded">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold small mb-1">
+                                            {% if reply.author %}
+                                            {{ reply.author.username }}
+                                            {% else %}
+                                            {{ reply.guest_name or '游客' }}
+                                            {% endif %}
+                                            <i class="fas fa-arrow-right text-muted mx-1 small"></i>
+                                            <span class="text-muted">
+                                                {% if comment.author %}
+                                                {{ comment.author.username }}
+                                                {% else %}
+                                                {{ comment.guest_name or '游客' }}
+                                                {% endif %}
+                                            </span>
+                                            <small class="text-muted ms-2">{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        </h6>
+                                        <p class="mb-1 small">{{ reply.content }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
+                    {% endif %}
                     {% endfor %}
                 </div>
                 {% else %}
@@ -295,5 +333,23 @@ function copyLink() {
         alert('链接已复制到剪贴板');
     });
 }
+
+function replyToComment(commentId, username) {
+    document.getElementById('main_parent_id').value = commentId;
+    document.getElementById('comment_content').value = '@' + username + ' ';
+    document.getElementById('comment_content').focus();
+    document.getElementById('mainCommentForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+// 绑定回复按钮事件
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.reply-comment-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var commentId = this.getAttribute('data-comment-id');
+            var username = this.getAttribute('data-username');
+            replyToComment(commentId, username);
+        });
+    });
+});
 </script>
 {% endblock %}

@@ -104,7 +104,7 @@
             <td>
                 {% if user.role != 'admin' %}
                 <a href="{{ url_for('promote_user', user_id=user.id) }}" class="btn btn-warning btn-sm">提升管理员</a>
-                <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeleteUser('{{ user.username }}', {{ user.id }})">删除</button>
+                <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeleteUser('{{ user.username|replace("\\","\\\\")|replace("'","\\'") }}', {{ user.id }})">删除</button>
                 {% endif %}
             </td>
         </tr>
@@ -146,8 +146,8 @@
                 </td>
                 <td>
                     {% if report.status == 'pending' %}
-                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmHandleReport({{ report.id }}, 'violation', '{{ report.post.title }}')">确认违规</button>
-                    <button type="button" class="btn btn-secondary btn-sm ms-2" onclick="confirmHandleReport({{ report.id }}, 'rejected', '{{ report.post.title }}')">驳回</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmHandleReport({{ report.id }}, 'violation', '{{ report.post.title|replace("\\","\\\\")|replace("'","\\'") }}')">确认违规</button>
+                    <button type="button" class="btn btn-secondary btn-sm ms-2" onclick="confirmHandleReport({{ report.id }}, 'rejected', '{{ report.post.title|replace("\\","\\\\")|replace("'","\\'") }}')">驳回</button>
                     {% else %}
                     {% if report.handler %}
                     <small class="text-muted">由 {{ report.handler.username }} 处理</small>
@@ -243,7 +243,7 @@
             </div>
             <div class="card-footer bg-transparent">
                 <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-primary btn-sm">查看</a>
-                <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeletePost('{{ post.title }}', {{ post.id }})">删除</button>
+                <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeletePost('{{ post.title|replace("\\","\\\\")|replace("'","\\'") }}', {{ post.id }})">删除</button>
             </div>
         </div>
     </div>
@@ -305,7 +305,7 @@
                         <a href="{{ url_for('toggle_notice', notice_id=notice.id) }}" class="btn btn-{{ 'warning' if notice.is_active else 'success' }} btn-sm">
                             {{ '禁用' if notice.is_active else '启用' }}
                         </a>
-                        <a href="{{ url_for('delete_notice', notice_id=notice.id) }}" class="btn btn-danger btn-sm ms-2" onclick="return confirm('确定删除此公告？')">删除</a>
+                        <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeleteNotice({{ notice.id }}, '{{ notice.title|replace("\\","\\\\")|replace("'","\\'") }}')">删除</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -340,6 +340,9 @@
 </div>
 
 <form id="singleDeleteForm" method="POST" style="display: none;">
+</form>
+
+<form id="deleteNoticeForm" method="POST" action="{{ url_for('delete_notice', notice_id=0) }}" style="display: none;">
 </form>
 
 <form id="handleReportForm" action="" method="POST">
@@ -441,6 +444,14 @@ function confirmHandleReport(reportId, result, postTitle) {
         const form = document.getElementById('handleReportForm');
         form.action = '{{ url_for('handle_report', report_id=0) }}'.replace('/0', '/' + reportId);
         document.getElementById('report_result').value = result;
+        form.submit();
+    });
+}
+
+function confirmDeleteNotice(noticeId, title) {
+    showConfirm(`确定删除公告「${title}」？此操作不可撤销。`, function() {
+        const form = document.getElementById('deleteNoticeForm');
+        form.action = '{{ url_for('delete_notice', notice_id=0) }}'.replace('/0', '/' + noticeId);
         form.submit();
     });
 }

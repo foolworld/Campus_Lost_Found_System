@@ -4,14 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/instance/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/lost_found.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/lost_found.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/admin_dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/admin_dashboard.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/post_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/post_detail.html" afterDir="false" />
+    <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="1.增加了公告栏和管理员公告发布功能&#10;2.修复了失物在联系方式一栏显示放置地点的bug">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,6 +72,15 @@
       <updated>1783344821933</updated>
       <workItem from="1783643503811" duration="1639000" />
     </task>
+    <task id="LOCAL-00001" summary="1.增加了公告栏和管理员公告发布功能&#10;2.修复了失物在联系方式一栏显示放置地点的bug">
+      <option name="closed" value="true" />
+      <created>1783655382773</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1783655382773</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -93,5 +96,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="1.增加了公告栏和管理员公告发布功能&#10;2.修复了失物在联系方式一栏显示放置地点的bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="1.增加了公告栏和管理员公告发布功能&#10;2.修复了失物在联系方式一栏显示放置地点的bug" />
   </component>
 </project>

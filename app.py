@@ -70,11 +70,25 @@ class Comment(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     guest_name = db.Column(db.String(50))
     guest_token = db.Column(db.String(36))
+    parent_id = db.Column(db.Integer, db.ForeignKey('comment.id', ondelete='CASCADE'), nullable=True)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.now)
 
     post = db.relationship('Post', backref=db.backref('comments', lazy=True))
     author = db.relationship('User', backref=db.backref('comments', lazy=True))
+    parent = db.relationship('Comment', remote_side=[id], backref='replies')
+
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    type = db.Column(db.String(30), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    link = db.Column(db.String(200))
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now)
+
+    user = db.relationship('User', backref=db.backref('notifications', lazy=True))
 
 
 class Notice(db.Model):
@@ -91,6 +105,18 @@ def load_user(user_id):
 
 def tokenize(text):
     return [word for word in jieba.lcut(text) if word.strip()]
+
+
+def create_notification(user_id, notif_type, content, link):
+    """创建通知的辅助函数"""
+    notification = Notification(
+        user_id=user_id,
+        type=notif_type,
+        content=content,
+        link=link
+    )
+    db.session.add(notification)
+
 
 def compute_tf(tokens):
     tf = defaultdict(int)
@@ -312,7 +338,7 @@ def post_detail(post_id):
                 results.sort(key=lambda x: x[1], reverse=True)
                 similar_posts = [p for p, _ in results[:3]]
     except Exception as e:
-        print(f"Error computing similar posts: {e} - app.py:315")
+        print(f"Error computing similar posts: {e} - app.py:341")
 
     comments = []
     guest_token = request.cookies.get('guest_token')
@@ -341,6 +367,7 @@ def post_detail(post_id):
 def add_comment(post_id):
     post = Post.query.get_or_404(post_id)
     content = request.form.get('content', '').strip()
+    parent_id = request.form.get('parent_id')
     
     if not content:
         flash('请填写留言内容', 'danger')
@@ -350,9 +377,30 @@ def add_comment(post_id):
         comment = Comment(
             post_id=post_id,
             author_id=current_user.id,
-            content=content
+            content=content,
+            parent_id=int(parent_id) if parent_id else None
         )
         db.session.add(comment)
+        db.session.commit()
+        
+        # 通知帖子发布者（如果不是自己）
+        if post.author_id != current_user.id:
+            create_notification(
+                post.author_id,
+                'new_comment',
+                f'{current_user.username} 在您的帖子「{post.title}」下留言了',
+                url_for('post_detail', post_id=post_id)
+            )
+        # 如果是回复，通知被回复的人（排除自己回复自己、回复帖子发布者的情况）
+        if parent_id:
+            parent_comment = Comment.query.get(int(parent_id))
+            if parent_comment and parent_comment.author_id and parent_comment.author_id != current_user.id and parent_comment.author_id != post.author_id:
+                create_notification(
+                    parent_comment.author_id,
+                    'new_reply',
+                    f'{current_user.username} 回复了您在帖子「{post.title}」下的留言',
+                    url_for('post_detail', post_id=post_id)
+                )
         db.session.commit()
         flash('留言成功', 'success')
     else:
@@ -503,6 +551,7 @@ def admin_dashboard():
     
     return render_template('admin_dashboard.html', 
                            posts=posts, users=users, reports=reports, tab=tab,
+                           notices=[],
                            pending_count=pending_count,
                            approved_count=approved_count,
                            rejected_count=rejected_count,
@@ -518,6 +567,15 @@ def approve_post(post_id):
     post = Post.query.get_or_404(post_id)
     post.status = 'approved'
     db.session.commit()
+    
+    create_notification(
+        post.author_id,
+        'post_approved',
+        f'您的帖子「{post.title}」已通过审核',
+        url_for('post_detail', post_id=post_id)
+    )
+    db.session.commit()
+    
     flash('已通过审核', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -531,6 +589,15 @@ def reject_post(post_id):
     post = Post.query.get_or_404(post_id)
     post.status = 'rejected'
     db.session.commit()
+    
+    create_notification(
+        post.author_id,
+        'post_rejected',
+        f'您的帖子「{post.title}」已被拒绝',
+        url_for('post_detail', post_id=post_id)
+    )
+    db.session.commit()
+    
     flash('已拒绝审核', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -641,6 +708,17 @@ def batch_review_posts():
     if reviewed_count > 0:
         db.session.commit()
         action_text = '通过' if action == 'approve' else '拒绝'
+        notif_type = 'post_approved' if action == 'approve' else 'post_rejected'
+        for post_id in post_id_list:
+            post = Post.query.get(post_id)
+            if post:
+                create_notification(
+                    post.author_id,
+                    notif_type,
+                    f'您的帖子「{post.title}」已{action_text}审核',
+                    url_for('post_detail', post_id=post_id)
+                )
+        db.session.commit()
         flash(f'成功{action_text} {reviewed_count} 条信息', 'success')
     
     if skipped_count > 0:
@@ -822,7 +900,7 @@ def toggle_notice(notice_id):
     return redirect(url_for('admin_notices'))
 
 
-@app.route('/admin/notice/<int:notice_id>/delete')
+@app.route('/admin/notice/<int:notice_id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_notice(notice_id):
     if current_user.role != 'admin':
@@ -852,6 +930,39 @@ def get_notices():
 def notices_page():
     notices = Notice.query.filter_by(is_active=True).order_by(Notice.created_at.desc()).all()
     return render_template('notices.html', notices=notices)
+
+
+@app.route('/api/notifications/unread-count')
+@login_required
+def unread_notification_count():
+    count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    return {'count': count}
+
+
+@app.route('/notifications')
+@login_required
+def notifications_page():
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    return render_template('notifications.html', notifications=notifications)
+
+
+@app.route('/api/notifications/mark-read', methods=['POST'])
+@login_required
+def mark_notifications_read():
+    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({'is_read': True})
+    db.session.commit()
+    return {'status': 'ok'}
+
+
+@app.route('/api/notifications/read/<int:notification_id>', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    if notification.user_id != current_user.id:
+        return {'status': 'error', 'message': '无权操作'}, 403
+    notification.is_read = True
+    db.session.commit()
+    return {'status': 'ok'}
 
 
 def create_sample_data():
