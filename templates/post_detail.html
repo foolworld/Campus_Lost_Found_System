@@ -50,7 +50,7 @@
                     {% else %}
                     <div class="alert alert-info">
                         <i class="fas fa-lock"></i> 登录后查看完整信息
-                        <a href="{{ url_for('login') }}" class="btn btn-primary mt-2">立即登录</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary mt-2">立即登录</a>
                     </div>
                     {% endif %}
                 </div>
@@ -58,19 +58,19 @@
             <div class="card-footer bg-transparent">
                 {% if current_user.is_authenticated %}
                 {% if current_user.id == post.author_id %}
-                <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-warning">
+                <a href="{{ url_for('post.edit_post', post_id=post.id) }}" class="btn btn-warning">
                     <i class="fas fa-edit"></i> 编辑
                 </a>
-                <a href="{{ url_for('delete_post', post_id=post.id) }}" class="btn btn-danger ms-2">
+                <a href="{{ url_for('post.delete_post', post_id=post.id) }}" class="btn btn-danger ms-2">
                     <i class="fas fa-trash"></i> 删除
                 </a>
                 {% endif %}
                 {% if current_user.role == 'admin' %}
                 {% if post.status == 'pending' %}
-                <a href="{{ url_for('approve_post', post_id=post.id) }}" class="btn btn-success">
+                <a href="{{ url_for('admin.approve_post', post_id=post.id) }}" class="btn btn-success">
                     <i class="fas fa-check"></i> 通过审核
                 </a>
-                <a href="{{ url_for('reject_post', post_id=post.id) }}" class="btn btn-danger ms-2">
+                <a href="{{ url_for('admin.reject_post', post_id=post.id) }}" class="btn btn-danger ms-2">
                     <i class="fas fa-times"></i> 拒绝
                 </a>
                 {% endif %}
@@ -81,7 +81,7 @@
                 </button>
                 {% endif %}
                 {% endif %}
-                <a href="{{ url_for('index') }}" class="btn btn-secondary float-end">返回列表</a>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary float-end">返回列表</a>
             </div>
         </div>
     </div>
@@ -122,7 +122,7 @@
                 <ul class="list-group list-group-flush">
                     {% for similar in similar_posts %}
                     <li class="list-group-item">
-                        <a href="{{ url_for('post_detail', post_id=similar.id) }}" class="text-decoration-none">
+                        <a href="{{ url_for('post.post_detail', post_id=similar.id) }}" class="text-decoration-none">
                             <h6>{{ similar.title }}</h6>
                         </a>
                         <p class="small text-muted">{{ similar.location }}</p>
@@ -141,7 +141,7 @@
             <h5><i class="fas fa-comments"></i> 留言板</h5>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('add_comment', post_id=post.id) }}" id="mainCommentForm">
+            <form method="POST" action="{{ url_for('comment.add_comment', post_id=post.id) }}" id="mainCommentForm">
                 {% if not current_user.is_authenticated %}
                 <div class="mb-3">
                     <label for="guest_name" class="form-label">您的昵称</label>
@@ -189,26 +189,26 @@
                             </div>
                         </div>
                         <div class="mt-2">
-                            {% if current_user.is_authenticated or (comment.guest_token and comment.guest_token == request.cookies.get('guest_token')) %}
-                            <button type="button" class="btn btn-sm btn-outline-primary me-2 reply-comment-btn" data-comment-id="{{ comment.id }}" data-username="{% if comment.author %}{{ comment.author.username|e }}{% else %}{{ (comment.guest_name or '游客')|e }}{% endif %}">
+                            {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('comment.reply_comment', comment_id=comment.id) }}" class="btn btn-sm btn-outline-primary me-2">
                                 <i class="fas fa-reply"></i> 回复
-                            </button>
+                            </a>
                             {% endif %}
                             {% if current_user.is_authenticated %}
                                 {% if comment.author_id == current_user.id or current_user.role == 'admin' %}
-                                <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" class="btn btn-sm btn-warning me-2">
+                                <a href="{{ url_for('comment.edit_comment', comment_id=comment.id) }}" class="btn btn-sm btn-warning me-2">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
                                 {% endif %}
                             {% else %}
                                 {% if comment.guest_token and comment.guest_token == request.cookies.get('guest_token') %}
-                                <a href="{{ url_for('edit_comment', comment_id=comment.id) }}" class="btn btn-sm btn-warning me-2">
+                                <a href="{{ url_for('comment.edit_comment', comment_id=comment.id) }}" class="btn btn-sm btn-warning me-2">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
                                 {% endif %}
                             {% endif %}
                             {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                            <a href="{{ url_for('delete_comment', comment_id=comment.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这条留言吗？')">
+                            <a href="{{ url_for('comment.delete_comment', comment_id=comment.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这条留言吗？')">
                                 <i class="fas fa-trash"></i> 删除
                             </a>
                             {% endif %}
@@ -237,6 +237,20 @@
                                             <small class="text-muted ms-2">{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                                         </h6>
                                         <p class="mb-1 small">{{ reply.content }}</p>
+                                    </div>
+                                    <div>
+                                        {% if current_user.is_authenticated %}
+                                            {% if reply.author_id == current_user.id or current_user.role == 'admin' %}
+                                            <a href="{{ url_for('comment.edit_comment', comment_id=reply.id) }}" class="btn btn-sm btn-warning me-1">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if current_user.role == 'admin' %}
+                                            <a href="{{ url_for('comment.delete_comment', comment_id=reply.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这条回复吗？')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            {% endif %}
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -281,7 +295,7 @@
                 <h5 class="modal-title" id="reportModalLabel"><i class="fas fa-flag"></i> 举报此信息</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ url_for('report_post', post_id=post.id) }}">
+            <form method="POST" action="{{ url_for('report.report_post', post_id=post.id) }}">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="report_reason" class="form-label">举报原因</label>
@@ -334,22 +348,6 @@ function copyLink() {
     });
 }
 
-function replyToComment(commentId, username) {
-    document.getElementById('main_parent_id').value = commentId;
-    document.getElementById('comment_content').value = '@' + username + ' ';
-    document.getElementById('comment_content').focus();
-    document.getElementById('mainCommentForm').scrollIntoView({ behavior: 'smooth' });
-}
 
-// 绑定回复按钮事件
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.reply-comment-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var commentId = this.getAttribute('data-comment-id');
-            var username = this.getAttribute('data-username');
-            replyToComment(commentId, username);
-        });
-    });
-});
 </script>
 {% endblock %}

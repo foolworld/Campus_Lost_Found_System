@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}回复留言 - 校园失物招领{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg">
+            <div class="card-header bg-info text-white">
+                <h4><i class="fas fa-reply"></i> 回复留言</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4 p-3 bg-light rounded">
+                    <h6 class="fw-bold">
+                        {% if parent_comment.author %}
+                        {{ parent_comment.author.username }}
+                        {% else %}
+                        {{ parent_comment.guest_name or '游客' }}
+                        {% endif %}
+                        <small class="text-muted ms-2">{{ parent_comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </h6>
+                    <p class="text-muted">{{ parent_comment.content }}</p>
+                </div>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="reply_content" class="form-label">回复内容</label>
+                        <textarea class="form-control" id="reply_content" name="content" rows="4" placeholder="请输入回复内容..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> 发布回复
+                    </button>
+                    <a href="{{ url_for('post.post_detail', post_id=parent_comment.post_id) }}" class="btn btn-secondary ms-2">取消</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

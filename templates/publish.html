@@ -10,7 +10,7 @@
                 <h4><i class="fas fa-plus-circle"></i> 发布信息</h4>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('publish') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ url_for('post.publish') }}" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label class="form-label">信息类型</label>
                         <div class="d-flex gap-3">
@@ -67,7 +67,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-paper-plane"></i> 发布
                     </button>
-                    <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">取消</a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary ms-2">取消</a>
                 </form>
             </div>
         </div>

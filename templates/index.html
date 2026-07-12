@@ -19,7 +19,7 @@
                     <h5><i class="fas fa-bullhorn"></i> {{ latest_notice.title }}</h5>
                     <p class="mb-0">{{ latest_notice.content[:100] }}{% if latest_notice.content|length > 100 %}...{% endif %}</p>
                 </div>
-                <a href="{{ url_for('notices_page') }}" class="btn btn-white btn-sm">查看全部</a>
+                <a href="{{ url_for('notice.notices_page') }}" class="btn btn-white btn-sm">查看全部</a>
             </div>
         </div>
     </div>
@@ -62,7 +62,7 @@
 {% endif %}
 
 <div class="mb-4">
-    <form class="d-flex" action="{{ url_for('search') }}" method="GET">
+    <form class="d-flex" action="{{ url_for('main.search') }}" method="GET">
         <input class="form-control me-2" type="search" name="keyword" placeholder="搜索失物信息..." aria-label="搜索">
         <button class="btn btn-primary" type="submit">
             <i class="fas fa-search"></i> 搜索
@@ -74,10 +74,10 @@
     <div class="d-flex justify-content-between align-items-center">
         <h2>最新拾物信息</h2>
         <div class="btn-group">
-            <a href="{{ url_for('index', page=1, sort='time') }}" class="btn btn-sm {% if sort == 'time' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <a href="{{ url_for('main.index', page=1, sort='time') }}" class="btn btn-sm {% if sort == 'time' %}btn-primary{% else %}btn-outline-primary{% endif %}">
                 <i class="fas fa-clock"></i> 最新发布
             </a>
-            <a href="{{ url_for('index', page=1, sort='hot') }}" class="btn btn-sm {% if sort == 'hot' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <a href="{{ url_for('main.index', page=1, sort='hot') }}" class="btn btn-sm {% if sort == 'hot' %}btn-primary{% else %}btn-outline-primary{% endif %}">
                 <i class="fas fa-fire"></i> 热门
             </a>
         </div>
@@ -112,7 +112,7 @@
                 <span class="badge bg-{{ 'success' if post.status == 'approved' else 'warning' }}">
                     {{ '已审核' if post.status == 'approved' else '待审核' }}
                 </span>
-                <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-primary float-end btn-sm">
+                <a href="{{ url_for('post.post_detail', post_id=post.id) }}" class="btn btn-primary float-end btn-sm">
                     查看详情
                 </a>
             </div>
@@ -132,7 +132,7 @@
         <ul class="pagination justify-content-center">
             {% if page > 1 %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('index', page=page-1) }}">上一页</a>
+                <a class="page-link" href="{{ url_for('main.index', page=page-1) }}">上一页</a>
             </li>
             {% endif %}
             <li class="page-item active">
@@ -140,7 +140,7 @@
             </li>
             {% if page < total_pages %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('index', page=page+1) }}">下一页</a>
+                <a class="page-link" href="{{ url_for('main.index', page=page+1) }}">下一页</a>
             </li>
             {% endif %}
         </ul>
