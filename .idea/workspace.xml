@@ -4,28 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="对示例进行了修改和修复">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="留言板块">
       <change beforePath="$PROJECT_DIR$/instance/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/lost_found.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/lost_found.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/comment.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/comment.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/notice.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/notice.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/notification.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/notification.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/post.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/post.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services.py" beforeDir="false" afterPath="$PROJECT_DIR$/services.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/css/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/admin_dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/admin_dashboard.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/my_posts.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/my_posts.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/notices.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/notices.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/notifications.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/notifications.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/publish.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/publish.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/post_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/post_detail.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/search.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/search.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -93,7 +81,7 @@
       <updated>1783344821933</updated>
       <workItem from="1783643503811" duration="1639000" />
       <workItem from="1783840558101" duration="2849000" />
-      <workItem from="1783901813286" duration="1915000" />
+      <workItem from="1783901813286" duration="2556000" />
     </task>
     <task id="LOCAL-00001" summary="1.增加了公告栏和管理员公告发布功能&#10;2.修复了失物在联系方式一栏显示放置地点的bug">
       <option name="closed" value="true" />
@@ -119,7 +107,23 @@
       <option name="project" value="LOCAL" />
       <updated>1783901896167</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="## 新增功能&#10;1. 关键词订阅（仅登录用户，10条上限，支持增删查）&#10;2. 通知批量操作：全部标记已读 + 清空已读&#10;3. 「我的留言」独立页面（支持登录用户与游客）&#10;4. 公告编辑 + 定时发布（publish_at + 立即启用）&#10;5. 搜索页时间筛选（近7天/30天/90天/全部）&#10;6. 搜索页空状态引导（去发布/看热门+热门推荐）+ 无结果状态引导（关键词建议+猜你感兴趣）&#10;7. 发布拾物后弹出感谢 Modal（含「感谢您的付出」提示）&#10;8. 热门排序真逻辑（按 view_count 降序）+ 帖子浏览量自增 + 浏览量徽章 UI&#10;9. 代码模块化拆分（9个独立路由文件，防连续bug）&#10;## 修复优化&#10;1. 修复 /my-comments 500 错误（hasattr 未定义）&#10;2. 修复搜索页「类型/时间范围」缺 Label 的无障碍问题&#10;3. 修复搜索页无 keyword 时空状态引导不显示的问题&#10;4. 修复 publish/edit 上传图片 Blueprint.app 空指针错误&#10;5. 修复 found 发布后不跳详情页导致感谢 Modal 不显示的问题&#10;6. 新增 view_count / notice.publish_at+created_by / keyword_subscription 表的数据库迁移脚本">
+      <option name="closed" value="true" />
+      <created>1783909881438</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1783909881438</updated>
+    </task>
+    <task id="LOCAL-00005" summary="留言板块">
+      <option name="closed" value="true" />
+      <created>1783909907144</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1783909907144</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -140,6 +144,8 @@
     <MESSAGE value="1.增加了公告栏和管理员公告发布功能&#10;2.修复了失物在联系方式一栏显示放置地点的bug" />
     <MESSAGE value="1.增加了公告跳出的功能&#10;2.增加了回复单独留言的功能&#10;3.增加了信息通知功能" />
     <MESSAGE value="对示例进行了修改和修复" />
-    <option name="LAST_COMMIT_MESSAGE" value="对示例进行了修改和修复" />
+    <MESSAGE value="## 新增功能&#10;1. 关键词订阅（仅登录用户，10条上限，支持增删查）&#10;2. 通知批量操作：全部标记已读 + 清空已读&#10;3. 「我的留言」独立页面（支持登录用户与游客）&#10;4. 公告编辑 + 定时发布（publish_at + 立即启用）&#10;5. 搜索页时间筛选（近7天/30天/90天/全部）&#10;6. 搜索页空状态引导（去发布/看热门+热门推荐）+ 无结果状态引导（关键词建议+猜你感兴趣）&#10;7. 发布拾物后弹出感谢 Modal（含「感谢您的付出」提示）&#10;8. 热门排序真逻辑（按 view_count 降序）+ 帖子浏览量自增 + 浏览量徽章 UI&#10;9. 代码模块化拆分（9个独立路由文件，防连续bug）&#10;## 修复优化&#10;1. 修复 /my-comments 500 错误（hasattr 未定义）&#10;2. 修复搜索页「类型/时间范围」缺 Label 的无障碍问题&#10;3. 修复搜索页无 keyword 时空状态引导不显示的问题&#10;4. 修复 publish/edit 上传图片 Blueprint.app 空指针错误&#10;5. 修复 found 发布后不跳详情页导致感谢 Modal 不显示的问题&#10;6. 新增 view_count / notice.publish_at+created_by / keyword_subscription 表的数据库迁移脚本" />
+    <MESSAGE value="留言板块" />
+    <option name="LAST_COMMIT_MESSAGE" value="留言板块" />
   </component>
 </project>

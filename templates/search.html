@@ -6,28 +6,28 @@
 <h2>搜索结果</h2>
 
 <div class="mb-4">
-    <form class="row g-2" id="searchForm" action="{{ url_for('main.search') }}" method="GET">
+    <form class="row g-2 align-items-end" id="searchForm" action="{{ url_for('main.search') }}" method="GET">
         <div class="col-md-6">
             <input class="form-control" type="search" name="keyword" value="{{ keyword }}" placeholder="搜索失物信息..." aria-label="搜索">
         </div>
-        <div class="col-md-2">
-            <label for="postTypeSelect" class="form-label">类型</label>
-            <select id="postTypeSelect" class="form-select" name="post_type" onchange="document.getElementById('searchForm').submit()">
+        <div class="col-md-2 d-flex align-items-center gap-2">
+            <label for="postTypeSelect" class="form-label mb-0 text-nowrap small">类型</label>
+            <select id="postTypeSelect" class="form-select flex-grow-1" name="post_type" onchange="document.getElementById('searchForm').submit()">
                 <option value="all" {% if type_filter == 'all' %}selected{% endif %}>全部类型</option>
                 <option value="found" {% if type_filter == 'found' %}selected{% endif %}>拾物</option>
                 <option value="lost" {% if type_filter == 'lost' %}selected{% endif %}>失物</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <label for="timeRangeSelect" class="form-label">时间范围</label>
-            <select id="timeRangeSelect" class="form-select" name="time" onchange="document.getElementById('searchForm').submit()">
+        <div class="col-md-2 d-flex align-items-center gap-2">
+            <label for="timeRangeSelect" class="form-label mb-0 text-nowrap small">时间范围</label>
+            <select id="timeRangeSelect" class="form-select flex-grow-1" name="time" onchange="document.getElementById('searchForm').submit()">
                 <option value="all" {% if time_range == 'all' %}selected{% endif %}>全部时间</option>
                 <option value="7d" {% if time_range == '7d' %}selected{% endif %}>近7天</option>
                 <option value="30d" {% if time_range == '30d' %}selected{% endif %}>近30天</option>
                 <option value="90d" {% if time_range == '90d' %}selected{% endif %}>近90天</option>
             </select>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-2 d-flex align-items-stretch">
             <button class="btn btn-primary w-100" type="submit">
                 <i class="fas fa-search"></i> 搜索
             </button>
