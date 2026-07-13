@@ -201,7 +201,8 @@
             </div>
             <div class="card-footer bg-transparent">
                 <a href="{{ url_for('admin.approve_post', post_id=post.id) }}" class="btn btn-success btn-sm">通过</a>
-                <a href="{{ url_for('admin.reject_post', post_id=post.id) }}" class="btn btn-danger btn-sm ms-2">拒绝</a>
+                <a href="{{ url_for('admin.reject_post', post_id=post.id) }}" class="btn btn-danger btn-sm ms-2"
+                   onclick="return confirm('确定拒绝帖子「{{ post.title }}」？帖子将被删除且不可恢复。');">拒绝</a>
             </div>
         </div>
     </div>

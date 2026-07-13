@@ -10,22 +10,6 @@
     </div>
 </div>
 
-{% if latest_notice %}
-<div class="mb-4">
-    <div class="card bg-info text-white">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5><i class="fas fa-bullhorn"></i> {{ latest_notice.title }}</h5>
-                    <p class="mb-0">{{ latest_notice.content[:100] }}{% if latest_notice.content|length > 100 %}...{% endif %}</p>
-                </div>
-                <a href="{{ url_for('notice.notices_page') }}" class="btn btn-white btn-sm">查看全部</a>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
 {% if is_admin %}
 <div class="row mb-4">
     <div class="col-md-6">
@@ -62,26 +46,26 @@
 {% endif %}
 
 <div class="mb-6">
-    <div class="search-banner rounded-xl p-6 shadow-lg relative">
+    <div class="search-banner search-banner-home rounded-3 p-5 shadow-lg position-relative">
         <div class="text-center mb-4">
-            <h2 class="text-white text-lg font-semibold">每一件失物，都有人在等你</h2>
-            <p class="text-white/80 text-sm">快速搜索，让失物早日回家</p>
+            <h2 class="banner-title fw-semibold fs-3 mb-2">每一件失物，都有人在等你</h2>
+            <p class="banner-subtitle fs-6 mb-0">快速搜索，让失物早日回家</p>
         </div>
         <form action="{{ url_for('main.search') }}" method="GET" class="d-flex gap-3 align-items-center">
             <div class="flex-grow-1">
                 <div class="input-group">
-                    <span class="input-group-text bg-white/10 border-white/20 text-white/60" style="border-radius: 10px 0 0 10px;">
+                    <span class="input-group-text" style="border-radius: 10px 0 0 10px;">
                         <i class="fas fa-search"></i>
                     </span>
                     <input type="search" name="keyword" class="form-control search-glass-input" placeholder="搜索物品名称、地点、描述..." aria-label="搜索" style="border-radius: 0 10px 10px 0; height: 48px;">
                 </div>
             </div>
-            <button type="submit" class="btn btn-white text-primary font-semibold px-6" style="height: 48px; border-radius: 10px;">
+            <button type="submit" class="btn btn-white text-primary fw-semibold px-5" style="height: 48px; border-radius: 10px; background-color: #ffffff;">
                 <i class="fas fa-search"></i> 搜索
             </button>
         </form>
         <div class="mt-3 text-center">
-            <span class="text-white/70 text-sm">热门搜索：</span>
+            <span class="hot-search-label small">热门搜索：</span>
             <a href="{{ url_for('main.search', keyword='手机') }}" class="hot-search-tag">手机</a>
             <a href="{{ url_for('main.search', keyword='钥匙') }}" class="hot-search-tag">钥匙</a>
             <a href="{{ url_for('main.search', keyword='校园卡') }}" class="hot-search-tag">校园卡</a>
@@ -108,7 +92,7 @@
     {% for post in posts %}
     <div class="col">
         <div class="card h-100 item-card {% if post.post_type == 'lost' %}lost{% endif %}">
-            <span class="badge bg-orange text-white view-badge"><i class="fas fa-fire"></i> {{ post.view_count or 0 }}</span>
+            <span class="badge bg-primary text-white view-badge"><i class="fas fa-eye"></i> {{ post.view_count or 0 }}</span>
             {% if post.image %}
             <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片" style="height: 200px; object-fit: cover;">
             {% else %}
@@ -148,26 +132,95 @@
     {% endfor %}
 </div>
 
-{% if posts %}
-<div class="mt-4">
+{% if posts and total_pages and total_pages > 1 %}
+<div class="mt-5">
     <nav aria-label="分页">
-        <ul class="pagination justify-content-center">
+        {# ---- 上半部分：页码按钮 + 上/下一页 ---- #}
+        <ul class="pagination pagination-sm justify-content-center mb-2">
+            {# 上一页 #}
             {% if page > 1 %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('main.index', page=page-1) }}">上一页</a>
+                <a class="page-link" href="{{ url_for('main.index', page=page-1, sort=sort) }}">上一页</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">上一页</span>
             </li>
             {% endif %}
-            <li class="page-item active">
-                <span class="page-link">{{ page }}</span>
+
+            {# 第 1 页（不在范围内才显示，并加省略号） #}
+            {% set page_window_start = [page - 1, 1] | max %}
+            {% set page_window_end   = [page + 1, total_pages] | min %}
+            {% if page_window_start > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.index', page=1, sort=sort) }}">1</a>
             </li>
+                {% if page_window_start > 2 %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endif %}
+
+            {# 当前页前后（前一页 / 当前 / 后一页） #}
+            {% for p in range(page_window_start, page_window_end + 1) %}
+                {% if p == page %}
+            <li class="page-item active" aria-current="page">
+                <span class="page-link">{{ p }}<span class="visually-hidden">(当前)</span></span>
+            </li>
+                {% else %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.index', page=p, sort=sort) }}">{{ p }}</a>
+            </li>
+                {% endif %}
+            {% endfor %}
+
+            {# 最后一页（不在范围内才显示，并加省略号） #}
+            {% if page_window_end < total_pages %}
+                {% if page_window_end < total_pages - 1 %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.index', page=total_pages, sort=sort) }}">{{ total_pages }}</a>
+            </li>
+            {% endif %}
+
+            {# 下一页 #}
             {% if page < total_pages %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('main.index', page=page+1) }}">下一页</a>
+                <a class="page-link" href="{{ url_for('main.index', page=page+1, sort=sort) }}">下一页</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">下一页</span>
             </li>
             {% endif %}
         </ul>
+
+        {# ---- 下半部分：总页数显示 + 输入跳转 ---- #}
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 small text-muted">
+            <span>共 <b class="text-primary">{{ total_pages }}</b> 页，第 <b class="text-primary">{{ page }}</b> / {{ total_pages }} 页</span>
+            <form action="{{ url_for('main.index') }}" method="GET" class="d-flex align-items-center gap-2" onsubmit="return validatePageJump(this, {{ total_pages }});">
+                <input type="hidden" name="sort" value="{{ sort }}">
+                <label for="pageJump" class="form-label mb-0">跳转到</label>
+                <input type="number" id="pageJump" name="page" min="1" max="{{ total_pages }}" value="{{ page }}"
+                       class="form-control form-control-sm" style="width: 80px;">
+                <span>页</span>
+                <button type="submit" class="btn btn-primary btn-sm">GO</button>
+            </form>
+        </div>
     </nav>
 </div>
+
+<script>
+function validatePageJump(form, totalPages) {
+    const input = form.querySelector('input[name="page"]');
+    let v = parseInt(input.value, 10);
+    if (isNaN(v)) { input.value = 1; return true; }
+    if (v < 1) v = 1;
+    if (v > totalPages) v = totalPages;
+    input.value = v;
+    return true;
+}
+</script>
 {% endif %}
 
 <script>

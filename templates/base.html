@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #1A365D 0%, #2B6CB0 100%);">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: var(--gradient-sky);">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="fas fa-search"></i> 校园失物招领
@@ -64,12 +64,12 @@
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="btn btn-outline-white text-white border-white hover:bg-white hover:text-teal-600 transition-all rounded-full px-4 py-1.5" href="{{ url_for('auth.login') }}">
+                        <a class="btn btn-outline-light text-white rounded-pill px-4 py-1.5" href="{{ url_for('auth.login') }}">
                             <i class="fas fa-sign-in-alt me-1"></i> 登录
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="btn bg-white text-teal-600 hover:bg-teal-50 font-semibold rounded-full px-4 py-1.5 shadow-sm" href="{{ url_for('auth.register') }}">
+                        <a class="btn btn-light text-primary font-semibold rounded-pill px-4 py-1.5 shadow-sm" href="{{ url_for('auth.register') }}">
                             <i class="fas fa-user-plus me-1"></i> 注册
                         </a>
                     </li>
@@ -94,7 +94,7 @@
         <div class="modal fade" id="thanksModal" tabindex="-1" aria-labelledby="thanksModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="modal-header bg-gradient text-white" style="background: var(--gradient-sky);">
                         <h5 class="modal-title" id="thanksModalLabel"><i class="fas fa-gift me-2"></i>🎉 感谢您的善意付出！</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -112,7 +112,7 @@
                         <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
                             <i class="fas fa-arrow-left me-1"></i> 继续浏览
                         </button>
-                        <a href="{{ url_for('post.publish') }}" class="btn btn-primary px-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        <a href="{{ url_for('post.publish') }}" class="btn btn-primary px-4" style="background: var(--gradient-sky); border: none;">
                             <i class="fas fa-plus me-1"></i> 再发一条
                         </a>
                     </div>
@@ -191,6 +191,14 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        function escapeHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
         const dontShowAgain = localStorage.getItem('dontShowNotice');
         if (dontShowAgain === 'true') return;
         
@@ -200,9 +208,10 @@
                 if (data.notices && data.notices.length > 0) {
                     const lastNotice = data.notices[0];
                     const publishTimeText = lastNotice.publish_at ? `发布于 ${lastNotice.publish_at}` : `创建于 ${lastNotice.created_at}`;
+                    const safeContent = escapeHtml(lastNotice.content).replace(/\r?\n/g, '<br>');
                     const noticeHtml = `
-                        <h4>${lastNotice.title}</h4>
-                        <p class="mt-2 notice-content-text">${lastNotice.content}</p>
+                        <h4>${escapeHtml(lastNotice.title)}</h4>
+                        <p class="mt-2 notice-content-text">${safeContent}</p>
                         <small class="text-muted">${publishTimeText}</small>
                     `;
                     document.getElementById('noticeContent').innerHTML = noticeHtml;

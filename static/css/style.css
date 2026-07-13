@@ -1,8 +1,12 @@
 :root {
-    --primary-color: #1A365D;
-    --primary-light: #2B6CB0;
-    --primary-dark: #153E75;
-    --secondary-color: #3182CE;
+    /* =========================================
+       全站天蓝色主题（Tailwind sky 配色
+       语义色：拾物绿 #22C55E / 失物金 #D69E2E（不动）
+    ========================================= */
+    --primary-color: #0ea5e9;      /* sky-600 天蓝主色 */
+    --primary-light: #38bdf8;      /* sky-400 天蓝亮色（渐变终点） */
+    --primary-dark: #0284c7;       /* sky-700 天蓝暗色（hover） */
+    --secondary-color: #0284c7;
     --found-color: #22C55E;
     --lost-color: #D69E2E;
     --bg-card: #ffffff;
@@ -11,6 +15,59 @@
     --text-secondary: #4A5568;
     --text-muted: #A0AEC0;
     --border-color: #E5E7EB;
+    /* 覆盖 Bootstrap 原生 primary 为天蓝 */
+    --bs-primary: #0ea5e9 !important;
+    --bs-primary-rgb: 14, 165, 233 !important;
+    --bs-link-color: #38bdf8;
+    --bs-link-hover-color: #0284c7;
+    /* 全站统一渐变：任意组件 header/按钮/横幅通用 */
+    --gradient-sky: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+}
+
+/* btn-primary 全站统一：天蓝渐变 + 阴影（覆盖 Bootstrap 默认值） */
+.btn-primary {
+    --bs-btn-bg: var(--primary-color) !important;
+    --bs-btn-border-color: var(--primary-color) !important;
+    --bs-btn-hover-bg: var(--primary-dark) !important;
+    --bs-btn-hover-border-color: var(--primary-dark) !important;
+    --bs-btn-active-bg: var(--primary-dark) !important;
+    --bs-btn-active-border-color: var(--primary-dark) !important;
+    --bs-btn-disabled-bg: var(--primary-color) !important;
+    --bs-btn-disabled-border-color: var(--primary-color) !important;
+    background: var(--gradient-sky) !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+.btn-primary:hover {
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.45);
+}
+
+/* bg-primary / bg-info 全站兜底天蓝（把 Bootstrap 原生 info/primary 色全部统一为天蓝色） */
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+.bg-info {
+    background: var(--gradient-sky) !important;
+    color: #fff !important;
+}
+.bg-info .text-white,
+.bg-info.text-white {
+    color: #fff !important;
+}
+.badge.bg-info {
+    background: var(--gradient-sky) !important;
+    color: #fff !important;
+}
+
+/* text-primary / text-info 类兜底天蓝 */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+.text-info {
+    color: var(--primary-color) !important;
+}
+.border-info {
+    border-color: var(--primary-color) !important;
 }
 
 body {
@@ -90,16 +147,6 @@ main {
     transform: scale(1.02);
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, #1A365D 0%, #2B6CB0 100%) !important;
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
-}
-
-.btn-primary:hover {
-    box-shadow: 0 6px 16px rgba(26, 54, 93, 0.4);
-}
-
 .btn-secondary {
     background: rgba(255, 255, 255, 0.2) !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -141,7 +188,7 @@ main {
 
 #drop-area.dragover {
     border-color: var(--primary-color);
-    background-color: #e9f5ff;
+    background-color: #f0f9ff;
 }
 
 .cursor-pointer {
@@ -149,7 +196,7 @@ main {
 }
 
 .search-banner {
-    background: linear-gradient(135deg, #1A365D 0%, #2D4A6F 50%, #1E3A5F 100%);
+    background: var(--gradient-sky);
     position: relative;
     overflow: hidden;
 }
@@ -261,6 +308,7 @@ main {
     margin-bottom: 1rem;
     text-align: justify;
     max-width: 680px;
+    white-space: pre-line;
 }
 
 .notice-paragraph:last-child {
@@ -280,7 +328,7 @@ main {
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--primary-color);
-    background: rgba(26, 54, 93, 0.1);
+    background: rgba(14, 165, 233, 0.1);
     padding: 2px 8px;
     border-radius: 4px;
     margin-bottom: 0.5rem;
@@ -316,11 +364,11 @@ main {
     top: 8px; 
     right: 8px; 
     z-index: 2; 
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
 }
 
-.bg-orange { 
-    background-color: #FD7E14 !important; 
-}
+/* bg-primary 类由 Bootstrap 提供原生蓝色背景 */
 
 .filter-btn {
     padding: 6px 16px;
@@ -339,8 +387,8 @@ main {
 }
 
 .filter-btn.active {
-    background: linear-gradient(135deg, #1A365D 0%, #2B6CB0 100%);
-    border-color: #1A365D;
+    background: var(--gradient-sky);
+    border-color: var(--primary-dark);
     color: white;
 }
 
@@ -355,7 +403,7 @@ main {
 
 .time-filter:hover {
     color: var(--primary-color);
-    background: rgba(26, 54, 93, 0.05);
+    background: rgba(14, 165, 233, 0.08);
 }
 
 .time-filter.active {
@@ -365,7 +413,7 @@ main {
 
 .search-input:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.15);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
     outline: none;
 }
 
@@ -400,7 +448,7 @@ main {
     bottom: 0;
     left: 0;
     height: 3px;
-    background: linear-gradient(90deg, #1A365D 0%, #2B6CB0 50%, #1A365D 100%);
+    background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary-light) 50%, var(--primary-dark) 100%);
     border-radius: 2px;
     transition: all 0.3s ease;
 }
@@ -411,7 +459,7 @@ main {
     right: 30px;
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, #1A365D 0%, #2B6CB0 100%);
+    background: var(--gradient-sky);
     color: white;
     border: none;
     border-radius: 50%;
@@ -420,7 +468,7 @@ main {
     align-items: center;
     justify-content: center;
     font-size: 18px;
-    box-shadow: 0 4px 12px rgba(26, 54, 93, 0.4);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
@@ -434,7 +482,7 @@ main {
 
 .back-to-top:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(26, 54, 93, 0.5);
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.5);
 }
 
 .notification-item {
@@ -442,8 +490,8 @@ main {
 }
 
 .notification-unread {
-    background-color: #EBF8FF !important;
-    border-left: 4px solid #2B6CB0;
+    background-color: #F0F9FF !important;
+    border-left: 4px solid var(--primary-color);
     color: #212529 !important;
 }
 
@@ -452,13 +500,13 @@ main {
 }
 
 .notification-link {
-    color: #1A365D !important;
+    color: var(--primary-color) !important;
     text-decoration: none;
 }
 
 .notification-link:hover {
     text-decoration: underline;
-    color: #153E75 !important;
+    color: var(--primary-dark) !important;
 }
 
 .notification-time {
@@ -476,6 +524,36 @@ main {
 .notification-unread .fa-times-circle {
     color: #DC3545 !important;
 }
+
+/* =========================================================
+   首页专属：search-banner-home（搜索框白色 + 副标题/热门搜索白色
+   不影响 /search 独立搜索页的毛玻璃效果
+========================================================= */
+.search-banner-home .input-group-text {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-right: none !important;
+    color: #9ca3af !important;
+}
+.search-banner-home .search-glass-input {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    color: #1f2937 !important;
+    box-shadow: none !important;
+}
+.search-banner-home .search-glass-input::placeholder { color: #9ca3af !important; opacity: 1 !important; }
+.search-banner-home .search-glass-input::-webkit-input-placeholder { color: #9ca3af !important; }
+.search-banner-home .search-glass-input:-moz-placeholder          { color: #9ca3af !important; }
+.search-banner-home .search-glass-input::-moz-placeholder         { color: #9ca3af !important; }
+.search-banner-home .search-glass-input:-ms-input-placeholder     { color: #9ca3af !important; }
+.search-banner-home .search-glass-input:focus {
+    background: #ffffff !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+}
+.search-banner-home .banner-title    { color: #ffffff; }
+.search-banner-home .banner-subtitle { color: rgba(255,255,255,0.85); }
+.search-banner-home .hot-search-label { color: rgba(255,255,255,0.85); }
 
 @media (max-width: 768px) {
     .display-4 {

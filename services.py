@@ -79,31 +79,41 @@ def find_similar_posts(post, max_count=3):
     return similar_posts
 
 
+def _img(prompt: str, size: str = 'square_hd') -> str:
+    """根据物品描述生成 text_to_image 接口 URL（示例配图，存储进 Post.image 字段）
+    说明：示例数据真正从 create_sample_data() 插入进数据库，不再是前端硬编码渲染。
+    """
+    from urllib.parse import quote
+    base = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image'
+    return f"{base}?prompt={quote(prompt)}&image_size={size}"
+
+
 def create_sample_data():
-    """创建示例数据（用户和帖子）"""
-    sample_users = [
-        {'username': 'zhangsan', 'password': '123456', 'role': 'user'},
-        {'username': 'lisi', 'password': '123456', 'role': 'user'},
-        {'username': 'wangwu', 'password': '123456', 'role': 'user'},
-    ]
-    
-    for u in sample_users:
-        if not User.query.filter_by(username=u['username']).first():
-            user = User(username=u['username'], role=u['role'])
-            user.set_password(u['password'])
-            db.session.add(user)
-    
-    db.session.commit()
-    
+    """创建示例数据（帖子）。
+
+    - 不再硬编码插入假用户：用户账号（admin、test）由 app.py 负责建；
+    - 删除了 zhangsan / lisi / wangwu 三个假用户的初始化逻辑；
+    - 示例帖子作者统一使用 admin / test（账号已在 app.py 保证存在）；
+    - 每篇示例帖子都存入了真实物品配图（text_to_image URL），image 字段不再是空字符串。
+    """
+    admin = User.query.filter_by(username='admin').first()
+    test  = User.query.filter_by(username='test').first()
+    if not admin or not test:
+        # 账号尚未就绪（例如首次启动 app.py 会先创建 admin/test，再调本函数），跳过
+        return
+
     sample_posts = [
+        # ---------- 拾物（found），已审核通过 ----------
         {
             'title': '校园卡一张',
             'description': '在图书馆三楼阅览室捡到一张校园卡，卡号开头是2023，姓名看不清。卡面是蓝色的，带有学校logo。',
             'pickup_time': '2026-07-05 14:30',
             'location': '图书馆三楼阅览室',
             'place_location': '图书馆一楼服务台',
-            'author_username': 'zhangsan',
-            'status': 'approved'
+            'post_type': 'found',
+            'status': 'approved',
+            'author_id': admin.id,
+            'image': _img('blue Chinese university student id card on library reading desk, school logo visible, closeup realistic photo'),
         },
         {
             'title': '黑色钱包一个',
@@ -111,8 +121,10 @@ def create_sample_data():
             'pickup_time': '2026-07-05 12:15',
             'location': '食堂二楼',
             'place_location': '食堂一楼失物招领处',
-            'author_username': 'lisi',
-            'status': 'approved'
+            'post_type': 'found',
+            'status': 'approved',
+            'author_id': test.id,
+            'image': _img('black leather wallet closed on cafeteria table, card slots visible, realistic photo'),
         },
         {
             'title': 'iPhone手机一部',
@@ -120,8 +132,10 @@ def create_sample_data():
             'pickup_time': '2026-07-04 18:45',
             'location': '教学楼A栋302教室',
             'place_location': '教学楼A栋值班室',
-            'author_username': 'wangwu',
-            'status': 'approved'
+            'post_type': 'found',
+            'status': 'approved',
+            'author_id': admin.id,
+            'image': _img('black iPhone smartphone on classroom wooden desk, slight screen scratch, top view, realistic photo'),
         },
         {
             'title': '蓝色雨伞一把',
@@ -129,8 +143,10 @@ def create_sample_data():
             'pickup_time': '2026-07-04 17:00',
             'location': '体育馆门口',
             'place_location': '体育馆服务台',
-            'author_username': 'zhangsan',
-            'status': 'approved'
+            'post_type': 'found',
+            'status': 'approved',
+            'author_id': test.id,
+            'image': _img('blue folding umbrella with cartoon pattern, silver handle, at gym entrance doorway, realistic photo'),
         },
         {
             'title': '笔记本电脑一台',
@@ -138,8 +154,10 @@ def create_sample_data():
             'pickup_time': '2026-07-03 16:30',
             'location': '实验室B栋205',
             'place_location': '实验室B栋管理员办公室',
-            'author_username': 'lisi',
-            'status': 'approved'
+            'post_type': 'found',
+            'status': 'approved',
+            'author_id': admin.id,
+            'image': _img('silver Lenovo ThinkPad X1 Carbon laptop open on lab bench, realistic photo'),
         },
         {
             'title': '学生证一个',
@@ -147,8 +165,10 @@ def create_sample_data():
             'pickup_time': '2026-07-03 20:00',
             'location': '操场跑道',
             'place_location': '学生事务中心',
-            'author_username': 'wangwu',
-            'status': 'approved'
+            'post_type': 'found',
+            'status': 'approved',
+            'author_id': test.id,
+            'image': _img('Chinese student ID card with small photo, on outdoor running track by grass, closeup photo'),
         },
         {
             'title': '白色耳机一副',
@@ -156,26 +176,10 @@ def create_sample_data():
             'pickup_time': '2026-07-02 10:20',
             'location': '图书馆自习室',
             'place_location': '图书馆服务台',
-            'author_username': 'zhangsan',
-            'status': 'approved'
-        },
-        {
-            'title': '保温杯一个',
-            'description': '在教学楼C栋走廊捡到一个不锈钢保温杯，颜色是金色的，容量大约500ml。',
-            'pickup_time': '2026-07-02 09:30',
-            'location': '教学楼C栋走廊',
-            'place_location': '教学楼C栋值班室',
-            'author_username': 'lisi',
-            'status': 'pending'
-        },
-        {
-            'title': '篮球一个',
-            'description': '在篮球场捡到一个橙色篮球，上面有Nike标志，看起来还比较新。',
-            'pickup_time': '2026-07-01 15:00',
-            'location': '篮球场',
-            'place_location': '体育馆器材室',
-            'author_username': 'wangwu',
-            'status': 'pending'
+            'post_type': 'found',
+            'status': 'approved',
+            'author_id': admin.id,
+            'image': _img('white Apple AirPods earbuds with round charging case on library reading table, realistic photo'),
         },
         {
             'title': '眼镜一副',
@@ -183,27 +187,52 @@ def create_sample_data():
             'pickup_time': '2026-07-01 11:45',
             'location': '食堂三楼',
             'place_location': '食堂失物招领处',
-            'author_username': 'zhangsan',
-            'status': 'approved'
-        }
+            'post_type': 'found',
+            'status': 'approved',
+            'author_id': test.id,
+            'image': _img('black frame myopia eyeglasses on cafeteria tray, clear lens, closeup realistic photo'),
+        },
+        # ---------- 拾物（found），仍待管理员审核 ----------
+        {
+            'title': '保温杯一个',
+            'description': '在教学楼C栋走廊捡到一个不锈钢保温杯，颜色是金色的，容量大约500ml。',
+            'pickup_time': '2026-07-02 09:30',
+            'location': '教学楼C栋走廊',
+            'place_location': '教学楼C栋值班室',
+            'post_type': 'found',
+            'status': 'pending',
+            'author_id': test.id,
+            'image': _img('golden 500ml stainless steel thermos cup standing in school corridor, realistic photo'),
+        },
+        {
+            'title': '篮球一个',
+            'description': '在篮球场捡到一个橙色篮球，上面有Nike标志，看起来还比较新。',
+            'pickup_time': '2026-07-01 15:00',
+            'location': '篮球场',
+            'place_location': '体育馆器材室',
+            'post_type': 'found',
+            'status': 'pending',
+            'author_id': admin.id,
+            'image': _img('orange Nike basketball on outdoor court, pebbled surface, realistic photo'),
+        },
     ]
-    
+
     for p in sample_posts:
         if not Post.query.filter_by(title=p['title']).first():
-            author = User.query.filter_by(username=p['author_username']).first()
-            if author:
-                post = Post(
-                    title=p['title'],
-                    description=p['description'],
-                    pickup_time=p['pickup_time'],
-                    location=p['location'],
-                    place_location=p['place_location'],
-                    author_id=author.id,
-                    post_type=p.get('post_type', 'found'),
-                    status=p['status']
-                )
-                db.session.add(post)
-    
+            post = Post(
+                title=p['title'],
+                description=p['description'],
+                pickup_time=p['pickup_time'],
+                location=p['location'],
+                place_location=p['place_location'],
+                author_id=p['author_id'],
+                post_type=p.get('post_type', 'found'),
+                status=p['status'],
+                image=p.get('image') or None,
+                view_count=0,
+            )
+            db.session.add(post)
+
     db.session.commit()
 
 

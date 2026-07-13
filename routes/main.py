@@ -15,11 +15,28 @@ main_bp = Blueprint('main', __name__)
 def index():
     page = request.args.get('page', 1, type=int)
     sort = request.args.get('sort', 'time', type=str)
-    
+
     if sort == 'hot':
-        posts = Post.query.filter_by(status='approved').order_by(Post.view_count.desc().nullslast(), Post.created_at.desc()).paginate(page=page, per_page=6)
+        posts = Post.query.filter_by(status='approved').order_by(Post.view_count.desc().nullslast(), Post.created_at.desc()).paginate(page=1, per_page=6)
     else:
-        posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
+        posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=1, per_page=6)
+
+    # 页码越界保护：跳转输入非法时自动钳位到合法范围
+    if page < 1:
+        page = 1
+    elif page > posts.pages and posts.pages > 0:
+        # 按最终合法页重查一次
+        page = posts.pages
+        if sort == 'hot':
+            posts = Post.query.filter_by(status='approved').order_by(Post.view_count.desc().nullslast(), Post.created_at.desc()).paginate(page=page, per_page=6)
+        else:
+            posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
+    elif page > 1:
+        # 正常翻页也重新按指定页查询
+        if sort == 'hot':
+            posts = Post.query.filter_by(status='approved').order_by(Post.view_count.desc().nullslast(), Post.created_at.desc()).paginate(page=page, per_page=6)
+        else:
+            posts = Post.query.filter_by(status='approved').order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
     
     total_posts = Post.query.filter_by(status='approved').count()
     total_users = User.query.count()

@@ -136,10 +136,32 @@ def delete_post(post_id):
     if post.author_id != current_user.id and current_user.role != 'admin':
         flash('无权删除此信息', 'danger')
         return redirect(url_for('post.post_detail', post_id=post_id))
-    
+
     db.session.delete(post)
     db.session.commit()
     flash('删除成功', 'success')
+
+    # 优先按来源跳回原界面，保证"我的发布删完仍在我的发布"；兜底再回首页
+    # 1) next 参数（同源安全校验，防止开放重定向）
+    next_url = request.args.get('next') or request.form.get('next')
+    if next_url:
+        from urllib.parse import urlparse
+        parsed = urlparse(next_url)
+        # 允许相对路径 /xxx 或 同 host/空 netloc 的完整 URL
+        if not parsed.netloc or parsed.netloc == request.host.split(':')[0]:
+            return redirect(next_url)
+
+    # 2) 同源 referrer（包含 my-posts 则一定跳回我的发布）
+    referer = request.headers.get('Referer', '')
+    if referer:
+        from urllib.parse import urlparse as _up
+        rp = _up(referer)
+        same_host = (not rp.netloc) or (rp.netloc == request.host) or (rp.netloc.split(':')[0] == request.host.split(':')[0])
+        if same_host:
+            # 在我的发布页删除 → 保持我的发布界面
+            return redirect(referer)
+
+    # 3) 兜底回首页
     return redirect(url_for('main.index'))
 
 
