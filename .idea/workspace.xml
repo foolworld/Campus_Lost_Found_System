@@ -4,8 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="优化了搜索UI">
+    <list default="true" id="ac5fb9e9-f29e-469b-a71a-25ae60a13f50" name="更改" comment="留言板块">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/instance/lost_found.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/lost_found.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routes/notice.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/notice.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/css/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/js/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/static/js/main.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/my_posts.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/my_posts.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/notices.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/notices.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/search.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/search.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,21 +51,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.app.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Users/wen/PycharmProjects/Campus_Lost_Found_System&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.app.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "feature/UIstyle",
+    "last_opened_file_path": "D:/Users/wen/PycharmProjects/Campus_Lost_Found_System",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -72,7 +83,7 @@
       <updated>1783344821933</updated>
       <workItem from="1783643503811" duration="1639000" />
       <workItem from="1783840558101" duration="2849000" />
-      <workItem from="1783901813286" duration="4141000" />
+      <workItem from="1783901813286" duration="2556000" />
     </task>
     <task id="LOCAL-00001" summary="1.增加了公告栏和管理员公告发布功能&#10;2.修复了失物在联系方式一栏显示放置地点的bug">
       <option name="closed" value="true" />
@@ -114,15 +125,7 @@
       <option name="project" value="LOCAL" />
       <updated>1783909907144</updated>
     </task>
-    <task id="LOCAL-00006" summary="优化了搜索UI">
-      <option name="closed" value="true" />
-      <created>1783911864203</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1783911864203</updated>
-    </task>
-    <option name="localTasksCounter" value="7" />
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -145,7 +148,6 @@
     <MESSAGE value="对示例进行了修改和修复" />
     <MESSAGE value="## 新增功能&#10;1. 关键词订阅（仅登录用户，10条上限，支持增删查）&#10;2. 通知批量操作：全部标记已读 + 清空已读&#10;3. 「我的留言」独立页面（支持登录用户与游客）&#10;4. 公告编辑 + 定时发布（publish_at + 立即启用）&#10;5. 搜索页时间筛选（近7天/30天/90天/全部）&#10;6. 搜索页空状态引导（去发布/看热门+热门推荐）+ 无结果状态引导（关键词建议+猜你感兴趣）&#10;7. 发布拾物后弹出感谢 Modal（含「感谢您的付出」提示）&#10;8. 热门排序真逻辑（按 view_count 降序）+ 帖子浏览量自增 + 浏览量徽章 UI&#10;9. 代码模块化拆分（9个独立路由文件，防连续bug）&#10;## 修复优化&#10;1. 修复 /my-comments 500 错误（hasattr 未定义）&#10;2. 修复搜索页「类型/时间范围」缺 Label 的无障碍问题&#10;3. 修复搜索页无 keyword 时空状态引导不显示的问题&#10;4. 修复 publish/edit 上传图片 Blueprint.app 空指针错误&#10;5. 修复 found 发布后不跳详情页导致感谢 Modal 不显示的问题&#10;6. 新增 view_count / notice.publish_at+created_by / keyword_subscription 表的数据库迁移脚本" />
     <MESSAGE value="留言板块" />
-    <MESSAGE value="优化了搜索UI" />
-    <option name="LAST_COMMIT_MESSAGE" value="优化了搜索UI" />
+    <option name="LAST_COMMIT_MESSAGE" value="留言板块" />
   </component>
 </project>

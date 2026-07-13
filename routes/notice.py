@@ -175,4 +175,22 @@ def notices_page():
         Notice.is_active == True,
         db.or_(Notice.publish_at.is_(None), Notice.publish_at <= now)
     ).order_by(Notice.created_at.desc()).all()
+    
+    for notice in notices:
+        notice.publisher = User.query.get(notice.created_by) if notice.created_by else None
+        notice.is_new = (now - notice.created_at).days < 3
+        
+        content = notice.content
+        paragraphs_raw = [p.strip() for p in content.split('\n\n') if p.strip()]
+        notice.paragraphs = []
+        
+        for p in paragraphs_raw:
+            if p.startswith('【') and '】' in p:
+                parts = p.split('】', 1)
+                tag = parts[0][1:]
+                text = parts[1].strip() if len(parts) > 1 else ''
+                notice.paragraphs.append({'type': 'quote', 'tag': tag, 'content': text})
+            else:
+                notice.paragraphs.append({'type': 'normal', 'content': p})
+    
     return render_template('notices.html', notices=notices)
