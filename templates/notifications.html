@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}我的通知 - 校园失物招领{% endblock %}
+
+{% block content %}
+<h2>我的通知</h2>
+
+{% if notifications %}
+<div class="list-group">
+    {% for notification in notifications %}
+    <div class="list-group-item {% if not notification.is_read %}active{% endif %}">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h6 class="fw-bold">
+                    {% if notification.type == 'new_comment' %}
+                    <i class="fas fa-comment"></i>
+                    {% elif notification.type == 'new_reply' %}
+                    <i class="fas fa-reply"></i>
+                    {% elif notification.type == 'post_approved' %}
+                    <i class="fas fa-check-circle text-success"></i>
+                    {% elif notification.type == 'post_rejected' %}
+                    <i class="fas fa-times-circle text-danger"></i>
+                    {% else %}
+                    <i class="fas fa-bell"></i>
+                    {% endif %}
+                    <a href="{{ notification.link or '#' }}" onclick="markAsRead({{ notification.id }})" class="notification-link">{{ notification.content }}</a>
+                </h6>
+                <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            <div>
+                {% if not notification.is_read %}
+                <span class="badge bg-primary">未读</span>
+                {% else %}
+                <span class="badge bg-secondary">已读</span>
+                {% endif %}
+                {% if current_user.role == 'admin' %}
+                <button type="button" class="btn btn-sm btn-danger ms-2" onclick="confirmDeleteNotification({{ notification.id }})">
+                    <i class="fas fa-trash"></i> 删除
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-8">
+    <i class="fas fa-bell fa-5x text-muted mb-3"></i>
+    <p class="text-muted">暂无通知</p>
+</div>
+{% endif %}
+
+<script>
+function markAsRead(notificationId) {
+    fetch('{{ url_for('notification.mark_notification_read', notification_id=0) }}'.replace('/0', '/' + notificationId), {
+        method: 'POST'
+    }).then(function(response) {
+        if (response.ok) {
+            var badge = document.getElementById('notificationBadge');
+            if (badge) {
+                var currentCount = parseInt(badge.textContent) || 0;
+                if (currentCount > 0) {
+                    badge.textContent = currentCount - 1;
+                    if (currentCount - 1 === 0) {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+        }
+    }).catch(function(err) {
+        console.error('Failed to mark notification as read:', err);
+    });
+}
+
+function confirmDeleteNotification(notificationId) {
+    if (confirm('确定要删除这条通知吗？')) {
+        fetch('{{ url_for('notification.delete_notification', notification_id=0) }}'.replace('/0', '/' + notificationId), {
+            method: 'POST'
+        }).then(function(response) {
+            if (response.ok) {
+                window.location.reload();
+            }
+        }).catch(function(err) {
+            console.error('Failed to delete notification:', err);
+        });
+    }
+}
+</script>
+{% endblock %}

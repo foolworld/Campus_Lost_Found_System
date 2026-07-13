@@ -14,7 +14,7 @@
                 <textarea class="form-control" id="comment_content" name="content" rows="4" required>{{ comment.content }}</textarea>
             </div>
             <button type="submit" class="btn btn-primary">保存修改</button>
-            <a href="{{ url_for('post_detail', post_id=comment.post_id) }}" class="btn btn-secondary ms-2">取消</a>
+            <a href="{{ url_for('post.post_detail', post_id=comment.post_id) }}" class="btn btn-secondary ms-2">取消</a>
         </form>
     </div>
 </div>

@@ -11,7 +11,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="fas fa-search"></i> 校园失物招领
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -20,24 +20,24 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('index') }}">首页</a>
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('main.index') }}">首页</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('search') }}">搜索</a>
+                        <a class="nav-link" href="{{ url_for('main.search') }}">搜索</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('notices_page') }}">公告</a>
+                        <a class="nav-link" href="{{ url_for('notice.notices_page') }}">公告</a>
                     </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('publish') }}">发布信息</a>
+                        <a class="nav-link" href="{{ url_for('post.publish') }}">发布信息</a>
                     </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item me-2">
-                        <a class="nav-link position-relative" href="{{ url_for('notifications_page') }}" id="notificationBell">
+                        <a class="nav-link position-relative" href="{{ url_for('notification.notifications_page') }}" id="notificationBell">
                             <i class="fas fa-bell"></i>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display: none;">
                                 0
@@ -50,19 +50,19 @@
                         </a>
                         <ul class="dropdown-menu">
                             {% if current_user.role == 'admin' %}
-                            <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">管理后台</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.admin_dashboard') }}">管理后台</a></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('my_posts') }}">我的发布</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('post.my_posts') }}">我的发布</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">退出登录</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">退出登录</a></li>
                         </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">登录</a>
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">登录</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('register') }}">注册</a>
+                        <a class="nav-link" href="{{ url_for('auth.register') }}">注册</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -96,7 +96,7 @@
     {% if current_user.is_authenticated %}
     <script>
     function updateNotificationBadge() {
-        fetch('{{ url_for('unread_notification_count') }}')
+        fetch('{{ url_for('notification.unread_notification_count') }}')
             .then(response => response.json())
             .then(data => {
                 const badge = document.getElementById('notificationBadge');
