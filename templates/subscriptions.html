@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}关键词订阅 - 校园失物招领{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2>关键词订阅</h2>
+    <p class="text-muted mb-0">
+        <i class="fas fa-info-circle me-1"></i>
+        当新帖子审核通过时，若标题或描述命中您订阅的关键词，您将收到站内通知
+    </p>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form action="{{ url_for('subscription.add_subscription') }}" method="post" class="row g-3 align-items-end">
+            <div class="col-12 col-md-8">
+                <label for="keywordInput" class="form-label fw-bold">
+                    <i class="fas fa-plus-circle me-1 text-primary"></i>添加关键词订阅
+                </label>
+                <input type="text" id="keywordInput" name="keyword"
+                       class="form-control form-control-lg"
+                       maxlength="20"
+                       placeholder="学生证、钥匙、AirPods..."
+                       oninput="checkKeywordLength(this)">
+                <small class="text-muted">
+                    已订阅 <span id="currentCount">{{ subscriptions|length }}</span> / 10，
+                    <span id="charCount">0</span>/20 字
+                </small>
+            </div>
+            <div class="col-12 col-md-4 d-grid">
+                <button type="submit" class="btn btn-primary btn-lg" id="addBtn" onclick="return validateKeyword();">
+                    <i class="fas fa-plus me-1"></i>添加订阅
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if subscriptions %}
+<div class="list-group shadow">
+    {% for sub in subscriptions %}
+    <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-3 py-3">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span class="badge bg-primary rounded-pill fs-6 px-4 py-2">
+                <i class="fas fa-tag me-1"></i>{{ sub.keyword }}
+            </span>
+            <small class="text-muted">
+                <i class="fas fa-clock me-1"></i>{{ sub.created_at.strftime('%Y-%m-%d %H:%M') }}
+            </small>
+            <span class="text-muted small">
+                <i class="fas fa-bell text-warning me-1"></i>将匹配新帖子的通知
+            </span>
+        </div>
+        <form action="{{ url_for('subscription.delete_subscription', sub_id=sub.id) }}" method="post" style="display: inline;"
+              onsubmit="return confirm('确定要取消订阅「{{ sub.keyword }}」吗？');">
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-bell-slash me-1"></i>取消订阅
+            </button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-8">
+    <div class="mb-4">
+        <i class="fas fa-bell fa-6x text-muted mb-3" style="opacity: 0.4;"></i>
+    </div>
+    <p class="text-muted fs-5 mb-4">还没订阅关键词，帮您自动匹配新帖子</p>
+    <div class="mb-4">
+        <p class="small text-muted mb-3">快速添加热门关键词：</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            {% set hot_keywords = ['学生证', '钥匙', '耳机', '校园卡', '钱包'] %}
+            {% for kw in hot_keywords %}
+            <button type="button" class="btn btn-outline-primary btn-sm"
+                    onclick="fillKeyword('{{ kw }}')">
+                <i class="fas fa-bolt me-1 text-warning"></i>{{ kw }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function fillKeyword(keyword) {
+    var input = document.getElementById('keywordInput');
+    if (input) {
+        input.value = keyword;
+        checkKeywordLength(input);
+        input.focus();
+    }
+}
+
+function checkKeywordLength(input) {
+    var count = input.value.length;
+    var counter = document.getElementById('charCount');
+    if (counter) {
+        counter.textContent = count;
+    }
+}
+
+function validateKeyword() {
+    var input = document.getElementById('keywordInput');
+    var currentCount = parseInt(document.getElementById('currentCount').textContent) || 0;
+    if (currentCount >= 10) {
+        alert('最多只能订阅 10 个关键词，请先取消部分订阅');
+        return false;
+    }
+    if (!input.value.trim()) {
+        alert('请输入关键词');
+        return false;
+    }
+    if (input.value.trim().length > 20) {
+        alert('关键词长度不能超过 20 字');
+        return false;
+    }
+    return true;
+}
+</script>
+{% endblock %}

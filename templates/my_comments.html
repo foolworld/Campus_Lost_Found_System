@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}我的留言 - 校园失物招领{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>我的留言</h2>
+    <span class="badge bg-{{ 'primary' if user_viewing == 'login' else 'info' }}">
+        <i class="fas fa-{{ 'user' if user_viewing == 'login' else 'globe' }} me-1"></i>
+        {{ '登录用户' if user_viewing == 'login' else '游客（仅当前浏览器可见）' }}
+    </span>
+</div>
+
+{% if comments.total == 0 %}
+<div class="col-12 text-center py-8">
+    <div class="mb-4">
+        <i class="fas fa-comments fa-6x text-muted mb-3" style="opacity: 0.4;"></i>
+    </div>
+    {% if user_viewing == 'guest' and not request.cookies.get('guest_token') %}
+    <p class="text-muted fs-5 mb-4">请登录或发布留言后可查看</p>
+    {% else %}
+    <p class="text-muted fs-5 mb-4">还没有留言记录</p>
+    {% endif %}
+    <div class="d-flex justify-content-center gap-3">
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+            <i class="fas fa-list me-1"></i>去浏览帖子
+        </a>
+        {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.login', next=url_for('comment.my_comments_page')) }}" class="btn btn-outline-primary">
+            <i class="fas fa-sign-in-alt me-1"></i>立即登录
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+{% set comment_list = comments.items %}
+<div class="row g-4">
+    {% for comment in comment_list %}
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    {% if comment.post %}
+                    <a href="{{ url_for('post.post_detail', post_id=comment.post.id) }}#comment-{{ comment.id }}" class="text-decoration-none fw-bold text-primary">
+                        <i class="fas fa-link me-1"></i>{{ comment.post.title }}
+                    </a>
+                    <span class="badge bg-{{ 'success' if comment.post.post_type == 'found' else 'danger' }}">
+                        {{ '拾物' if comment.post.post_type == 'found' else '失物' }}
+                    </span>
+                    <span class="badge bg-{{ 'success' if comment.post.status == 'approved' else ('warning' if comment.post.status == 'pending' else 'danger') }}">
+                        {% if comment.post.status == 'approved' %}已审核
+                        {% elif comment.post.status == 'pending' %}待审核
+                        {% else %}已拒绝{% endif %}
+                    </span>
+                    {% else %}
+                    <span class="fw-bold text-muted">
+                        <i class="fas fa-trash-alt me-1"></i>帖子已删除
+                    </span>
+                    {% endif %}
+                </div>
+                {% if comment.parent_id %}
+                <span class="badge bg-secondary">
+                    <i class="fas fa-reply me-1"></i>回复
+                </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <p class="card-text mb-0">
+                    {% if comment.parent_id %}
+                    <span class="text-primary fw-bold">
+                        回复 @{{ comment.parent.author.username if comment.parent and comment.parent.author else (comment.parent.guest_name if comment.parent else '未知用户') }}：
+                    </span>
+                    {% endif %}
+                    {{ comment.content[:150] }}{% if comment.content|length > 150 %}...{% endif %}
+                </p>
+            </div>
+            <div class="card-footer bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </small>
+                <div class="d-flex gap-2">
+                    {% if comment.post %}
+                    <a href="{{ url_for('post.post_detail', post_id=comment.post.id) }}#comment-{{ comment.id }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-external-link-alt me-1"></i>跳转帖子
+                    </a>
+                    {% endif %}
+                    {% set can_edit = (current_user.is_authenticated and comment.author_id == current_user.id) or (not current_user.is_authenticated and comment.guest_token and comment.guest_token == request.cookies.get('guest_token')) %}
+                    {% set can_delete = can_edit or (current_user.is_authenticated and current_user.role == 'admin') %}
+                    {% if can_edit and comment.post %}
+                    <a href="{{ url_for('comment.edit_comment', comment_id=comment.id) }}" class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-edit me-1"></i>编辑
+                    </a>
+                    {% endif %}
+                    {% if can_delete %}
+                    <form method="post" action="{{ url_for('comment.delete_comment', comment_id=comment.id) }}" style="display: inline;" onsubmit="return confirm('确定要删除这条留言吗？');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash me-1"></i>删除
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if total_pages and total_pages > 1 %}
+<div class="mt-4">
+    <nav aria-label="分页">
+        <ul class="pagination justify-content-center">
+            {% if page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('comment.my_comments_page', page=page-1) }}">上一页</a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">{{ page }}</span>
+            </li>
+            {% if page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('comment.my_comments_page', page=page+1) }}">下一页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}
