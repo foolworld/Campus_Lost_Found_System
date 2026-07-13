@@ -8,7 +8,7 @@
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for post in posts %}
     <div class="col">
-        <div class="card h-100 shadow">
+        <div class="card h-100 item-card {% if post.post_type == 'lost' %}lost{% endif %}">
             <span class="badge bg-orange text-white view-badge"><i class="fas fa-fire"></i> {{ post.view_count or 0 }}</span>
             {% if post.image %}
             <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片" style="height: 150px; object-fit: cover;">
@@ -25,8 +25,11 @@
                 </small>
             </div>
             <div class="card-footer bg-transparent">
-                <span class="badge bg-{{ 'success' if post.status == 'approved' else 'warning' }}">
+                <span class="badge bg-{{ 'success' if post.status == 'approved' else 'info' }}">
                     {{ '已审核' if post.status == 'approved' else '待审核' }}
+                </span>
+                <span class="badge bg-{{ 'success' if post.post_type == 'found' else 'warning' }}">
+                    {{ '拾物' if post.post_type == 'found' else '失物' }}
                 </span>
                 <a href="{{ url_for('post.post_detail', post_id=post.id) }}" class="btn btn-primary btn-sm float-end">查看</a>
                 <a href="{{ url_for('post.edit_post', post_id=post.id) }}" class="btn btn-warning btn-sm float-end me-2">编辑</a>
