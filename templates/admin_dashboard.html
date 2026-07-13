@@ -42,35 +42,35 @@
 
 <ul class="nav nav-tabs mb-4">
     <li class="nav-item">
-        <a class="nav-link {% if tab == 'pending' %}active{% endif %}" href="{{ url_for('admin_dashboard', tab='pending') }}">待审核</a>
+        <a class="nav-link {% if tab == 'pending' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard', tab='pending') }}">待审核</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if tab == 'approved' %}active{% endif %}" href="{{ url_for('admin_dashboard', tab='approved') }}">已通过</a>
+        <a class="nav-link {% if tab == 'approved' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard', tab='approved') }}">已通过</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if tab == 'rejected' %}active{% endif %}" href="{{ url_for('admin_dashboard', tab='rejected') }}">已拒绝</a>
+        <a class="nav-link {% if tab == 'rejected' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard', tab='rejected') }}">已拒绝</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if tab == 'users' %}active{% endif %}" href="{{ url_for('admin_dashboard', tab='users') }}">用户管理</a>
+        <a class="nav-link {% if tab == 'users' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard', tab='users') }}">用户管理</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if tab == 'reports' %}active{% endif %}" href="{{ url_for('admin_dashboard', tab='reports') }}">举报管理</a>
+        <a class="nav-link {% if tab == 'reports' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard', tab='reports') }}">举报管理</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if tab == 'notices' %}active{% endif %}" href="{{ url_for('admin_notices') }}">公告管理</a>
+        <a class="nav-link {% if tab == 'notices' %}active{% endif %}" href="{{ url_for('notice.admin_notices') }}">公告管理</a>
     </li>
 </ul>
 
-<form id="batchDeleteForm" action="{{ url_for('batch_delete_users') }}" method="POST">
+<form id="batchDeleteForm" action="{{ url_for('admin.batch_delete_users') }}" method="POST">
     <input type="hidden" name="user_ids" id="user_ids">
 </form>
 
-<form id="batchReviewForm" action="{{ url_for('batch_review_posts') }}" method="POST">
+<form id="batchReviewForm" action="{{ url_for('admin.batch_review_posts') }}" method="POST">
     <input type="hidden" name="post_ids" id="review_post_ids">
     <input type="hidden" name="action" id="review_action">
 </form>
 
-<form id="batchDeletePostsForm" action="{{ url_for('batch_delete_posts') }}" method="POST">
+<form id="batchDeletePostsForm" action="{{ url_for('admin.batch_delete_posts') }}" method="POST">
     <input type="hidden" name="post_ids" id="delete_post_ids">
     <input type="hidden" name="tab" id="delete_post_tab">
 </form>
@@ -103,7 +103,7 @@
             <td>{{ user.created_at }}</td>
             <td>
                 {% if user.role != 'admin' %}
-                <a href="{{ url_for('promote_user', user_id=user.id) }}" class="btn btn-warning btn-sm">提升管理员</a>
+                <a href="{{ url_for('admin.promote_user', user_id=user.id) }}" class="btn btn-warning btn-sm">提升管理员</a>
                 <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeleteUser('{{ user.username|replace("\\","\\\\")|replace("'","\\'") }}', {{ user.id }})">删除</button>
                 {% endif %}
             </td>
@@ -130,7 +130,7 @@
             {% for report in reports %}
             <tr>
                 <td>{{ report.id }}</td>
-                <td><a href="{{ url_for('post_detail', post_id=report.post.id) }}">{{ report.post.title }}</a></td>
+                <td><a href="{{ url_for('post.post_detail', post_id=report.post.id) }}">{{ report.post.title }}</a></td>
                 <td>{{ report.reporter.username }}</td>
                 <td>{{ report.reason[:50] }}{% if report.reason|length > 50 %}...{% endif %}</td>
                 <td>{{ report.created_at }}</td>
@@ -200,8 +200,8 @@
                 </small>
             </div>
             <div class="card-footer bg-transparent">
-                <a href="{{ url_for('approve_post', post_id=post.id) }}" class="btn btn-success btn-sm">通过</a>
-                <a href="{{ url_for('reject_post', post_id=post.id) }}" class="btn btn-danger btn-sm ms-2">拒绝</a>
+                <a href="{{ url_for('admin.approve_post', post_id=post.id) }}" class="btn btn-success btn-sm">通过</a>
+                <a href="{{ url_for('admin.reject_post', post_id=post.id) }}" class="btn btn-danger btn-sm ms-2">拒绝</a>
             </div>
         </div>
     </div>
@@ -242,7 +242,7 @@
                 </small>
             </div>
             <div class="card-footer bg-transparent">
-                <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-primary btn-sm">查看</a>
+                <a href="{{ url_for('post.post_detail', post_id=post.id) }}" class="btn btn-primary btn-sm">查看</a>
                 <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeletePost('{{ post.title|replace("\\","\\\\")|replace("'","\\'") }}', {{ post.id }})">删除</button>
             </div>
         </div>
@@ -262,7 +262,7 @@
         <h5><i class="fas fa-bullhorn"></i> 发布新公告</h5>
     </div>
     <div class="card-body">
-        <form method="POST" action="{{ url_for('add_notice') }}">
+        <form method="POST" action="{{ url_for('notice.add_notice') }}">
             <div class="mb-3">
                 <label for="notice_title" class="form-label">公告标题</label>
                 <input type="text" class="form-control" id="notice_title" name="title" placeholder="请输入公告标题" required>
@@ -302,7 +302,7 @@
                     <td><span class="badge bg-{{ 'success' if notice.is_active else 'secondary' }}">{{ '启用' if notice.is_active else '禁用' }}</span></td>
                     <td>{{ notice.created_at }}</td>
                     <td>
-                        <a href="{{ url_for('toggle_notice', notice_id=notice.id) }}" class="btn btn-{{ 'warning' if notice.is_active else 'success' }} btn-sm">
+                        <a href="{{ url_for('notice.toggle_notice', notice_id=notice.id) }}" class="btn btn-{{ 'warning' if notice.is_active else 'success' }} btn-sm">
                             {{ '禁用' if notice.is_active else '启用' }}
                         </a>
                         <button type="button" class="btn btn-danger btn-sm ms-2" onclick="confirmDeleteNotice({{ notice.id }}, '{{ notice.title|replace("\\","\\\\")|replace("'","\\'") }}')">删除</button>
@@ -342,7 +342,7 @@
 <form id="singleDeleteForm" method="POST" style="display: none;">
 </form>
 
-<form id="deleteNoticeForm" method="POST" action="{{ url_for('delete_notice', notice_id=0) }}" style="display: none;">
+<form id="deleteNoticeForm" method="POST" action="{{ url_for('notice.delete_notice', notice_id=0) }}" style="display: none;">
 </form>
 
 <form id="handleReportForm" action="" method="POST">
@@ -421,7 +421,7 @@ function batchDeletePosts(tab) {
 function confirmDeleteUser(username, userId) {
     showConfirm(`确定删除用户「${username}」？此操作不可撤销。`, function() {
         const form = document.getElementById('singleDeleteForm');
-        form.action = '{{ url_for('delete_user', user_id=0) }}'.replace('/0', '/' + userId);
+        form.action = '{{ url_for('admin.delete_user', user_id=0) }}'.replace('/0', '/' + userId);
         form.method = 'POST';
         form.submit();
     });
@@ -430,7 +430,7 @@ function confirmDeleteUser(username, userId) {
 function confirmDeletePost(title, postId) {
     showConfirm(`确定删除信息「${title}」？此操作不可撤销。`, function() {
         const form = document.getElementById('singleDeleteForm');
-        form.action = '{{ url_for('delete_post', post_id=0) }}'.replace('/0', '/' + postId);
+        form.action = '{{ url_for('post.delete_post', post_id=0) }}'.replace('/0', '/' + postId);
         form.method = 'POST';
         form.submit();
     });
@@ -442,7 +442,7 @@ function confirmHandleReport(reportId, result, postTitle) {
     const message = detailText ? `确定${actionText}「${postTitle}」？${detailText}。` : `确定${actionText}「${postTitle}」？`;
     showConfirm(message, function() {
         const form = document.getElementById('handleReportForm');
-        form.action = '{{ url_for('handle_report', report_id=0) }}'.replace('/0', '/' + reportId);
+        form.action = '{{ url_for('report.handle_report', report_id=0) }}'.replace('/0', '/' + reportId);
         document.getElementById('report_result').value = result;
         form.submit();
     });
@@ -451,7 +451,7 @@ function confirmHandleReport(reportId, result, postTitle) {
 function confirmDeleteNotice(noticeId, title) {
     showConfirm(`确定删除公告「${title}」？此操作不可撤销。`, function() {
         const form = document.getElementById('deleteNoticeForm');
-        form.action = '{{ url_for('delete_notice', notice_id=0) }}'.replace('/0', '/' + noticeId);
+        form.action = '{{ url_for('notice.delete_notice', notice_id=0) }}'.replace('/0', '/' + noticeId);
         form.submit();
     });
 }
