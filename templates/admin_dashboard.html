@@ -271,6 +271,14 @@
                 <label for="notice_content" class="form-label">公告内容</label>
                 <textarea class="form-control" id="notice_content" name="content" rows="4" placeholder="请输入公告内容..." required></textarea>
             </div>
+            <div class="mb-3">
+                <label for="notice_publish_at" class="form-label">定时发布时间（不填=立即发布）</label>
+                <input type="datetime-local" class="form-control" id="notice_publish_at" name="publish_at">
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="notice_is_active" name="is_active" checked>
+                <label class="form-check-label" for="notice_is_active">立即启用</label>
+            </div>
             <button type="submit" class="btn btn-primary">发布公告</button>
         </form>
     </div>
@@ -289,6 +297,7 @@
                     <th>标题</th>
                     <th>内容</th>
                     <th>状态</th>
+                    <th>定时发布时间</th>
                     <th>发布时间</th>
                     <th>操作</th>
                 </tr>
@@ -300,8 +309,29 @@
                     <td>{{ notice.title }}</td>
                     <td>{{ notice.content[:50] }}{% if notice.content|length > 50 %}...{% endif %}</td>
                     <td><span class="badge bg-{{ 'success' if notice.is_active else 'secondary' }}">{{ '启用' if notice.is_active else '禁用' }}</span></td>
-                    <td>{{ notice.created_at }}</td>
                     <td>
+                        {% if notice.publish_at is none %}
+                            <span class="badge bg-success">立即</span>
+                        {% else %}
+                            {% if notice.publish_at <= now %}
+                                <span class="badge bg-info">{{ notice.publish_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                <br><small class="text-muted">已发布</small>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ notice.publish_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                <br><small class="text-muted">待发布</small>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>{{ notice.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm me-2 notice-edit-btn"
+                            data-notice-id="{{ notice.id }}"
+                            data-notice-title="{{ notice.title|e }}"
+                            data-notice-content="{{ notice.content|e }}"
+                            data-notice-active="{{ 1 if notice.is_active else 0 }}"
+                            data-notice-publish-at="{{ notice.publish_at.strftime('%Y-%m-%dT%H:%M') if notice.publish_at else '' }}">
+                            <i class="fas fa-edit"></i> 编辑
+                        </button>
                         <a href="{{ url_for('notice.toggle_notice', notice_id=notice.id) }}" class="btn btn-{{ 'warning' if notice.is_active else 'success' }} btn-sm">
                             {{ '禁用' if notice.is_active else '启用' }}
                         </a>
@@ -335,6 +365,41 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                 <button type="button" class="btn btn-danger" id="confirmBtn">确认</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="noticeEditModal" tabindex="-1" aria-labelledby="noticeEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="noticeEditModalLabel"><i class="fas fa-edit"></i> 编辑公告 #<span id="editNoticeId"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="noticeEditForm" method="POST" action="{{ url_for('notice.edit_notice', notice_id=0) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editNoticeTitle" class="form-label">公告标题</label>
+                        <input type="text" class="form-control" id="editNoticeTitle" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editNoticeContent" class="form-label">公告内容</label>
+                        <textarea class="form-control" id="editNoticeContent" name="content" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editNoticePublishAt" class="form-label">定时发布时间（不填=立即发布）</label>
+                        <input type="datetime-local" class="form-control" id="editNoticePublishAt" name="publish_at">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="editNoticeIsActive" name="is_active">
+                        <label class="form-check-label" for="editNoticeIsActive">启用</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary" id="saveEditNoticeBtn">保存</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -455,5 +520,35 @@ function confirmDeleteNotice(noticeId, title) {
         form.submit();
     });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const editBtns = document.querySelectorAll('.notice-edit-btn');
+    const editModal = new bootstrap.Modal(document.getElementById('noticeEditModal'));
+    const editForm = document.getElementById('noticeEditForm');
+    const editNoticeId = document.getElementById('editNoticeId');
+    const editTitle = document.getElementById('editNoticeTitle');
+    const editContent = document.getElementById('editNoticeContent');
+    const editPublishAt = document.getElementById('editNoticePublishAt');
+    const editIsActive = document.getElementById('editNoticeIsActive');
+
+    editBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-notice-id');
+            const title = this.getAttribute('data-notice-title');
+            const content = this.getAttribute('data-notice-content');
+            const active = this.getAttribute('data-notice-active');
+            const publishAt = this.getAttribute('data-notice-publish-at');
+
+            editNoticeId.textContent = id;
+            editTitle.value = title;
+            editContent.value = content;
+            editPublishAt.value = publishAt || '';
+            editIsActive.checked = active === '1';
+
+            editForm.action = '{{ url_for('notice.edit_notice', notice_id=0) }}'.replace('/0', '/' + id);
+            editModal.show();
+        });
+    });
+});
 </script>
 {% endblock %}

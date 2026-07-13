@@ -80,3 +80,56 @@ main {
         font-size: 1rem;
     }
 }
+
+/* 通知列表样式 */
+.notification-item {
+    transition: background-color 0.2s;
+}
+
+.notification-unread {
+    background-color: #e8f0fe !important;
+    border-left: 4px solid #0d6efd;
+    color: #212529 !important;
+}
+
+.notification-unread h6 {
+    color: #212529 !important;
+}
+
+.notification-link {
+    color: #1a56db !important;
+    text-decoration: none;
+}
+
+.notification-link:hover {
+    text-decoration: underline;
+    color: #0d3f9e !important;
+}
+
+.notification-time {
+    color: #6c757d;
+}
+
+.notification-unread .notification-time {
+    color: #495057;
+}
+
+/* 未读状态下图标颜色保持清晰 */
+.notification-unread .fa-check-circle {
+    color: #198754 !important;
+}
+
+.notification-unread .fa-times-circle {
+    color: #dc3545 !important;
+}
+
+/* 公告内容：保留换行符与连续空白，同时允许自动换行 */
+.notice-content-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.7;
+}
+
+.view-badge { position: absolute; top: 8px; right: 8px; z-index: 2; }
+.bg-orange { background-color: #fd7e14 !important; }
+.card { position: relative; }

@@ -5,7 +5,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models import db, Post, User, Report, Notice
-from services import create_notification
+from services import create_notification, match_and_notify_subscribers
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -56,6 +56,8 @@ def approve_post(post_id):
     post = Post.query.get_or_404(post_id)
     post.status = 'approved'
     db.session.commit()
+
+    match_and_notify_subscribers(post)
     
     create_notification(
         post.author_id,
@@ -187,6 +189,7 @@ def batch_review_posts():
     post_id_list = [int(id.strip()) for id in post_ids.split(',') if id.strip().isdigit()]
     reviewed_count = 0
     skipped_count = 0
+    approved_posts = []
     
     for post_id in post_id_list:
         post = Post.query.get(post_id)
@@ -197,10 +200,17 @@ def batch_review_posts():
             continue
         
         post.status = 'approved' if action == 'approve' else 'rejected'
+        if action == 'approve':
+            approved_posts.append(post)
         reviewed_count += 1
     
     if reviewed_count > 0:
         db.session.commit()
+
+        if action == 'approve':
+            for post in approved_posts:
+                match_and_notify_subscribers(post)
+
         action_text = '通过' if action == 'approve' else '拒绝'
         notif_type = 'post_approved' if action == 'approve' else 'post_rejected'
         for post_id in post_id_list:

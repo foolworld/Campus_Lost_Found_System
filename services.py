@@ -5,7 +5,8 @@
 - 通知服务：创建用户通知
 - 数据服务：生成示例数据
 """
-from models import db, User, Post, Notification
+from datetime import datetime, timedelta
+from models import db, User, Post, Notification, KeywordSubscription
 from utils import tokenize, compute_idf, compute_tfidf, cosine_similarity
 
 
@@ -204,3 +205,47 @@ def create_sample_data():
                 db.session.add(post)
     
     db.session.commit()
+
+
+def match_and_notify_subscribers(post):
+    try:
+        subscriptions = KeywordSubscription.query.all()
+        if not subscriptions:
+            return
+
+        post_text = (post.title + ' ' + post.description).lower()
+        cutoff = datetime.now() - timedelta(hours=24)
+        post_link = f'/post/{post.id}'
+        notified_users = set()
+
+        for sub in subscriptions:
+            if sub.user_id == post.author_id:
+                continue
+
+            if sub.keyword.lower() not in post_text:
+                continue
+
+            dedup_key = (sub.user_id, post_link)
+            if dedup_key in notified_users:
+                continue
+
+            existing = Notification.query.filter(
+                Notification.user_id == sub.user_id,
+                Notification.type == 'new_post_match',
+                Notification.link == post_link,
+                Notification.created_at >= cutoff
+            ).first()
+            if existing:
+                continue
+
+            create_notification(
+                sub.user_id,
+                'new_post_match',
+                f'您订阅的关键词「{sub.keyword}」有新匹配：《{post.title}》',
+                post_link
+            )
+            notified_users.add(dedup_key)
+
+        db.session.commit()
+    except Exception:
+        db.session.rollback()

@@ -3,12 +3,30 @@
 {% block title %}我的通知 - 校园失物招领{% endblock %}
 
 {% block content %}
-<h2>我的通知</h2>
+{% set unread_count = notifications|selectattr('is_read', 'equalto', False)|list|length %}
+{% set total_count = notifications|length %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>我的通知</h2>
+    {% if notifications %}
+    <div class="d-flex align-items-center">
+        <span class="text-muted me-3">
+            未读 <span id="unreadStat">{{ unread_count }}</span> 条 / 共 <span id="totalStat">{{ total_count }}</span> 条
+        </span>
+        <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="markAllRead()">
+            <i class="fas fa-check-double"></i> 全部标记已读
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearReadNotifications()">
+            <i class="fas fa-broom"></i> 清空已读通知
+        </button>
+    </div>
+    {% endif %}
+</div>
 
 {% if notifications %}
-<div class="list-group">
+<div class="list-group" id="notificationList">
     {% for notification in notifications %}
-    <div class="list-group-item {% if not notification.is_read %}active{% endif %}">
+    <div class="list-group-item notification-item {% if not notification.is_read %}notification-unread{% endif %}" data-is-read="{{ 'true' if notification.is_read else 'false' }}" data-id="{{ notification.id }}">
         <div class="d-flex justify-content-between align-items-start">
             <div>
                 <h6 class="fw-bold">
@@ -20,18 +38,20 @@
                     <i class="fas fa-check-circle text-success"></i>
                     {% elif notification.type == 'post_rejected' %}
                     <i class="fas fa-times-circle text-danger"></i>
+                    {% elif notification.type == 'new_post_match' %}
+                    <i class="fas fa-bullhorn text-warning"></i>
                     {% else %}
                     <i class="fas fa-bell"></i>
                     {% endif %}
                     <a href="{{ notification.link or '#' }}" onclick="markAsRead({{ notification.id }})" class="notification-link">{{ notification.content }}</a>
                 </h6>
-                <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                <small class="notification-time">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
             </div>
             <div>
                 {% if not notification.is_read %}
-                <span class="badge bg-primary">未读</span>
+                <span class="badge bg-primary read-badge">未读</span>
                 {% else %}
-                <span class="badge bg-secondary">已读</span>
+                <span class="badge bg-secondary read-badge">已读</span>
                 {% endif %}
                 {% if current_user.role == 'admin' %}
                 <button type="button" class="btn btn-sm btn-danger ms-2" onclick="confirmDeleteNotification({{ notification.id }})">
@@ -51,21 +71,32 @@
 {% endif %}
 
 <script>
+function updateStats() {
+    var items = document.querySelectorAll('#notificationList .notification-item');
+    var total = items.length;
+    var unread = document.querySelectorAll('#notificationList .notification-item[data-is-read="false"]').length;
+    document.getElementById('unreadStat').textContent = unread;
+    document.getElementById('totalStat').textContent = total;
+}
+
 function markAsRead(notificationId) {
     fetch('{{ url_for('notification.mark_notification_read', notification_id=0) }}'.replace('/0', '/' + notificationId), {
         method: 'POST'
     }).then(function(response) {
         if (response.ok) {
-            var badge = document.getElementById('notificationBadge');
-            if (badge) {
-                var currentCount = parseInt(badge.textContent) || 0;
-                if (currentCount > 0) {
-                    badge.textContent = currentCount - 1;
-                    if (currentCount - 1 === 0) {
-                        badge.style.display = 'none';
-                    }
+            var item = document.querySelector('.notification-item[data-id="' + notificationId + '"]');
+            if (item) {
+                item.classList.remove('notification-unread');
+                item.setAttribute('data-is-read', 'true');
+                var badge = item.querySelector('.read-badge');
+                if (badge) {
+                    badge.classList.remove('bg-primary');
+                    badge.classList.add('bg-secondary');
+                    badge.textContent = '已读';
                 }
             }
+            updateStats();
+            updateNotificationBadge();
         }
     }).catch(function(err) {
         console.error('Failed to mark notification as read:', err);
@@ -78,12 +109,70 @@ function confirmDeleteNotification(notificationId) {
             method: 'POST'
         }).then(function(response) {
             if (response.ok) {
-                window.location.reload();
+                var item = document.querySelector('.notification-item[data-id="' + notificationId + '"]');
+                if (item) {
+                    item.remove();
+                    updateStats();
+                    updateNotificationBadge();
+                }
+                if (!document.querySelector('#notificationList .notification-item')) {
+                    window.location.reload();
+                }
             }
         }).catch(function(err) {
             console.error('Failed to delete notification:', err);
         });
     }
+}
+
+function markAllRead() {
+    fetch('{{ url_for('notification.mark_notifications_read') }}', {
+        method: 'POST'
+    }).then(function(response) {
+        return response.json();
+    }).then(function(data) {
+        if (data.success) {
+            var unreadItems = document.querySelectorAll('#notificationList .notification-item[data-is-read="false"]');
+            unreadItems.forEach(function(item) {
+                item.classList.remove('notification-unread');
+                item.setAttribute('data-is-read', 'true');
+                var badge = item.querySelector('.read-badge');
+                if (badge) {
+                    badge.classList.remove('bg-primary');
+                    badge.classList.add('bg-secondary');
+                    badge.textContent = '已读';
+                }
+            });
+            updateStats();
+            updateNotificationBadge();
+        }
+    }).catch(function(err) {
+        console.error('Failed to mark all as read:', err);
+    });
+}
+
+function clearReadNotifications() {
+    if (!confirm('确定要清空所有已读通知吗？')) {
+        return;
+    }
+    fetch('{{ url_for('notification.clear_read_notifications') }}', {
+        method: 'POST'
+    }).then(function(response) {
+        return response.json();
+    }).then(function(data) {
+        if (data.success) {
+            var readItems = document.querySelectorAll('#notificationList .notification-item[data-is-read="true"]');
+            readItems.forEach(function(item) {
+                item.remove();
+            });
+            updateStats();
+            if (!document.querySelector('#notificationList .notification-item')) {
+                window.location.reload();
+            }
+        }
+    }).catch(function(err) {
+        console.error('Failed to clear read notifications:', err);
+    });
 }
 </script>
 {% endblock %}

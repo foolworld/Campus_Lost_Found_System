@@ -6,15 +6,25 @@
 <h2>搜索结果</h2>
 
 <div class="mb-4">
-    <form class="row g-2" action="{{ url_for('main.search') }}" method="GET">
-        <div class="col-md-8">
+    <form class="row g-2" id="searchForm" action="{{ url_for('main.search') }}" method="GET">
+        <div class="col-md-6">
             <input class="form-control" type="search" name="keyword" value="{{ keyword }}" placeholder="搜索失物信息..." aria-label="搜索">
         </div>
         <div class="col-md-2">
-            <select class="form-select" name="post_type">
-                <option value="all" {% if post_type == 'all' %}selected{% endif %}>全部</option>
-                <option value="found" {% if post_type == 'found' %}selected{% endif %}>拾物</option>
-                <option value="lost" {% if post_type == 'lost' %}selected{% endif %}>失物</option>
+            <label for="postTypeSelect" class="form-label">类型</label>
+            <select id="postTypeSelect" class="form-select" name="post_type" onchange="document.getElementById('searchForm').submit()">
+                <option value="all" {% if type_filter == 'all' %}selected{% endif %}>全部类型</option>
+                <option value="found" {% if type_filter == 'found' %}selected{% endif %}>拾物</option>
+                <option value="lost" {% if type_filter == 'lost' %}selected{% endif %}>失物</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="timeRangeSelect" class="form-label">时间范围</label>
+            <select id="timeRangeSelect" class="form-select" name="time" onchange="document.getElementById('searchForm').submit()">
+                <option value="all" {% if time_range == 'all' %}selected{% endif %}>全部时间</option>
+                <option value="7d" {% if time_range == '7d' %}selected{% endif %}>近7天</option>
+                <option value="30d" {% if time_range == '30d' %}selected{% endif %}>近30天</option>
+                <option value="90d" {% if time_range == '90d' %}selected{% endif %}>近90天</option>
             </select>
         </div>
         <div class="col-md-2">
@@ -25,14 +35,38 @@
     </form>
 </div>
 
-{% if keyword %}
-<p class="text-muted">搜索关键词：<strong>{{ keyword }}</strong>，共找到 {{ posts|length }} 条结果</p>
+{% set type_text = {'all': '全部', 'found': '拾物', 'lost': '失物'} %}
+{% set time_text = {'all': '全部时间', '7d': '近7天', '30d': '近30天', '90d': '近90天'} %}
+{% if keyword or posts %}
+<p class="text-muted">
+    搜索结果：
+    {% if keyword %}关键词「<strong>{{ keyword }}</strong>」 · {% endif %}
+    类型：{{ type_text[type_filter] }} ·
+    {{ time_text[time_range] }}，
+    共找到 <strong>{{ posts|length }}</strong> 条
+</p>
 {% endif %}
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    {% for post in posts %}
+{% if not keyword and posts|length == 0 %}
+<div class="text-center py-5 mb-4">
+    <i class="fas fa-search fa-5x text-muted mb-3"></i>
+    <h4 class="text-muted mb-4">试试搜索丢失的物品名称</h4>
+    <div class="d-flex justify-content-center gap-3 mb-5">
+        <a href="{{ url_for('post.publish') }}" class="btn btn-lg btn-outline-primary">
+            <i class="fas fa-upload"></i> 去发布
+        </a>
+        <a href="{{ url_for('main.index', sort='hot') }}" class="btn btn-lg btn-outline-warning">
+            <i class="fas fa-fire"></i> 看热门
+        </a>
+    </div>
+</div>
+{% if hot_posts %}
+<h3 class="mb-3"><i class="fas fa-fire text-warning"></i> 热门推荐</h3>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+    {% for post in hot_posts %}
     <div class="col">
         <div class="card h-100 shadow">
+            <span class="badge bg-orange text-white view-badge"><i class="fas fa-fire"></i> {{ post.view_count or 0 }}</span>
             {% if post.image %}
             <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片" style="height: 200px; object-fit: cover;">
             {% else %}
@@ -64,11 +98,115 @@
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="col-12 text-center py-8">
-        <i class="fas fa-search fa-5x text-muted mb-3"></i>
-        <p class="text-muted">没有找到相关信息</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% elif keyword and posts|length == 0 %}
+<div class="text-center py-5 mb-4">
+    <i class="fas fa-box-open fa-5x text-muted mb-3"></i>
+    <h4 class="text-muted mb-3">没找到和《{{ keyword }}》相关的结果</h4>
+    <div class="mb-4">
+        <p class="text-muted mb-2">💡 试试：</p>
+        <ul class="list-unstyled text-muted">
+            <li>• 更短的关键词</li>
+            <li>• 去掉类型或时间筛选</li>
+            <li>• 搜索下面这些热门关键词：</li>
+        </ul>
+    </div>
+    <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+        {% for sug in suggestions %}
+        <form action="{{ url_for('main.search') }}" method="GET" class="d-inline">
+            <input type="hidden" name="keyword" value="{{ sug }}">
+            <input type="hidden" name="post_type" value="{{ type_filter }}">
+            <input type="hidden" name="time" value="{{ time_range }}">
+            <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                {{ sug }}
+            </button>
+        </form>
+        {% endfor %}
+    </div>
+</div>
+{% if hot_posts %}
+<h3 class="mb-3"><i class="fas fa-thumbs-up text-info"></i> 猜你感兴趣</h3>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+    {% for post in hot_posts[:3] %}
+    <div class="col">
+        <div class="card h-100 shadow">
+            <span class="badge bg-orange text-white view-badge"><i class="fas fa-fire"></i> {{ post.view_count or 0 }}</span>
+            {% if post.image %}
+            <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-image fa-5x text-muted"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text text-muted">{{ post.description[:50] }}{% if post.description|length > 50 %}...{% endif %}</p>
+                <div class="small text-muted">
+                    <p><i class="fas fa-map-marker-alt"></i> {{ post.location }}</p>
+                    {% if current_user.is_authenticated %}
+                    <p><i class="fas fa-clock"></i> {{ post.pickup_time }}</p>
+                    {% endif %}
+                    <p><i class="fas fa-user"></i> {{ post.author.username }}</p>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <span class="badge bg-{{ 'success' if post.post_type == 'found' else 'danger' }}">
+                    {{ '拾物' if post.post_type == 'found' else '失物' }}
+                </span>
+                <span class="badge bg-{{ 'success' if post.status == 'approved' else 'warning' }}">
+                    {{ '已审核' if post.status == 'approved' else '待审核' }}
+                </span>
+                <a href="{{ url_for('post.post_detail', post_id=post.id) }}" class="btn btn-primary float-end btn-sm">
+                    查看详情
+                </a>
+            </div>
+        </div>
     </div>
     {% endfor %}
 </div>
+{% endif %}
+
+{% else %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for post in posts %}
+    <div class="col">
+        <div class="card h-100 shadow">
+            <span class="badge bg-orange text-white view-badge"><i class="fas fa-fire"></i> {{ post.view_count or 0 }}</span>
+            {% if post.image %}
+            <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-image fa-5x text-muted"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text text-muted">{{ post.description[:50] }}{% if post.description|length > 50 %}...{% endif %}</p>
+                <div class="small text-muted">
+                    <p><i class="fas fa-map-marker-alt"></i> {{ post.location }}</p>
+                    {% if current_user.is_authenticated %}
+                    <p><i class="fas fa-clock"></i> {{ post.pickup_time }}</p>
+                    {% endif %}
+                    <p><i class="fas fa-user"></i> {{ post.author.username }}</p>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <span class="badge bg-{{ 'success' if post.post_type == 'found' else 'danger' }}">
+                    {{ '拾物' if post.post_type == 'found' else '失物' }}
+                </span>
+                <span class="badge bg-{{ 'success' if post.status == 'approved' else 'warning' }}">
+                    {{ '已审核' if post.status == 'approved' else '待审核' }}
+                </span>
+                <a href="{{ url_for('post.post_detail', post_id=post.id) }}" class="btn btn-primary float-end btn-sm">
+                    查看详情
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 {% endblock %}

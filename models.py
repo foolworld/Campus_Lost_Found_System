@@ -44,6 +44,7 @@ class Post(db.Model):
     post_type = db.Column(db.String(10), default='found')
     status = db.Column(db.String(20), default='pending')
     created_at = db.Column(db.DateTime, default=datetime.now)
+    view_count = db.Column(db.Integer, default=0)
 
     author = db.relationship('User', backref=db.backref('posts', lazy=True))
 
@@ -101,4 +102,18 @@ class Notice(db.Model):
     content = db.Column(db.Text, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    publish_at = db.Column(db.DateTime, nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+
+    creator = db.relationship('User', backref='published_notices')
+
+
+class KeywordSubscription(db.Model):
+    __tablename__ = 'keyword_subscription'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False, index=True)
+    keyword = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    user = db.relationship('User', backref=db.backref('subscriptions', lazy=True, cascade='all, delete-orphan'))
+    __table_args__ = (db.UniqueConstraint('user_id', 'keyword', name='uq_user_keyword'),)

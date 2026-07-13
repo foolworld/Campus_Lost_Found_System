@@ -26,9 +26,19 @@ def notifications_page():
 @notification_bp.route('/api/notifications/mark-read', methods=['POST'])
 @login_required
 def mark_notifications_read():
-    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({'is_read': True})
+    result = Notification.query.filter_by(user_id=current_user.id, is_read=False).update({'is_read': True})
     db.session.commit()
-    return {'status': 'ok'}
+    return {'success': True, 'count': result}
+
+
+@notification_bp.route('/api/notifications/clear-read', methods=['POST'])
+@login_required
+def clear_read_notifications():
+    query = Notification.query.filter_by(user_id=current_user.id, is_read=True)
+    deleted = query.count()
+    query.delete()
+    db.session.commit()
+    return {'success': True, 'deleted': deleted}
 
 
 @notification_bp.route('/api/notifications/read/<int:notification_id>', methods=['POST'])

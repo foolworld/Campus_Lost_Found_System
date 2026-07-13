@@ -87,6 +87,7 @@
     {% for post in posts %}
     <div class="col">
         <div class="card h-100 shadow">
+            <span class="badge bg-orange text-white view-badge"><i class="fas fa-fire"></i> {{ post.view_count or 0 }}</span>
             {% if post.image %}
             <img src="{{ url_for('static', filename='images/' + post.image) }}" class="card-img-top" alt="物品图片" style="height: 200px; object-fit: cover;">
             {% else %}

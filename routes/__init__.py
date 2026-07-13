@@ -14,6 +14,7 @@ def register_routes(app):
     from .notification import notification_bp
     from .notice import notice_bp
     from .report import report_bp
+    from .subscription import subscription_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -23,3 +24,4 @@ def register_routes(app):
     app.register_blueprint(notification_bp)
     app.register_blueprint(notice_bp)
     app.register_blueprint(report_bp)
+    app.register_blueprint(subscription_bp)

@@ -5,10 +5,42 @@
 import uuid
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 from models import db, Comment, Post
 from services import create_notification
 
 comment_bp = Blueprint('comment', __name__)
+
+
+@comment_bp.route('/my-comments')
+def my_comments_page():
+    page = request.args.get('page', 1, type=int)
+    tab = 'all'
+
+    if current_user.is_authenticated:
+        user_viewing = 'login'
+        query = Comment.query.filter_by(author_id=current_user.id)
+    else:
+        user_viewing = 'guest'
+        guest_token = request.cookies.get('guest_token', '')
+        if guest_token:
+            query = Comment.query.filter_by(guest_token=guest_token).filter(Comment.author_id.is_(None))
+        else:
+            # 无 guest_token 时用一个永远返回空的 query，保证统一走 Pagination（模板用 .total/.items）
+            query = Comment.query.filter(db.text('1 = 0'))
+
+    comments_pag = (
+        query.options(joinedload(Comment.post), joinedload(Comment.parent).joinedload(Comment.author))
+        .order_by(Comment.created_at.desc())
+        .paginate(page=page, per_page=10, error_out=False)
+    )
+
+    return render_template('my_comments.html',
+                           comments=comments_pag,
+                           tab=tab,
+                           user_viewing=user_viewing,
+                           page=page,
+                           total_pages=comments_pag.pages)
 
 
 @comment_bp.route('/post/<int:post_id>/comment', methods=['POST'])
@@ -73,21 +105,29 @@ def add_comment(post_id):
 
 
 @comment_bp.route('/comment/<int:comment_id>/delete', methods=['GET', 'POST'])
-@login_required
 def delete_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
-    
-    if current_user.role != 'admin':
-        flash('无权删除此留言', 'danger')
-        return redirect(url_for('post.post_detail', post_id=comment.post_id))
-    
     post_id = comment.post_id
+    
+    if current_user.is_authenticated:
+        if comment.author_id != current_user.id and current_user.role != 'admin':
+            flash('无权删除此留言', 'danger')
+            return redirect(url_for('post.post_detail', post_id=comment.post_id))
+    else:
+        guest_token = request.cookies.get('guest_token')
+        if not guest_token or not comment.guest_token or comment.guest_token != guest_token:
+            flash('无权删除此留言', 'danger')
+            return redirect(url_for('post.post_detail', post_id=comment.post_id))
+    
     db.session.delete(comment)
     db.session.commit()
     flash('留言已删除', 'success')
     
     post = Post.query.get(post_id)
     if post:
+        next_page = request.args.get('next')
+        if next_page == 'my_comments':
+            return redirect(url_for('comment.my_comments_page'))
         return redirect(url_for('post.post_detail', post_id=post_id))
     else:
         return redirect(url_for('main.index'))
