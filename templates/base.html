@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #1A365D 0%, #2B6CB0 100%);">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="fas fa-search"></i> 校园失物招领
@@ -45,8 +45,11 @@
                         </a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ current_user.username }}
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
+                                {{ current_user.username[:1] }}
+                            </div>
+                            <span>{{ current_user.username }}</span>
                         </a>
                         <ul class="dropdown-menu">
                             {% if current_user.role == 'admin' %}
@@ -61,10 +64,14 @@
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">登录</a>
+                        <a class="btn btn-outline-white text-white border-white hover:bg-white hover:text-teal-600 transition-all rounded-full px-4 py-1.5" href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt me-1"></i> 登录
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.register') }}">注册</a>
+                        <a class="btn bg-white text-teal-600 hover:bg-teal-50 font-semibold rounded-full px-4 py-1.5 shadow-sm" href="{{ url_for('auth.register') }}">
+                            <i class="fas fa-user-plus me-1"></i> 注册
+                        </a>
                     </li>
                     {% endif %}
                 </ul>
@@ -115,6 +122,10 @@
 
         {% block content %}{% endblock %}
     </main>
+
+    <button class="back-to-top" id="backToTop" title="回到顶部">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
     <footer class="bg-light py-4 mt-8">
         <div class="container text-center text-muted">
